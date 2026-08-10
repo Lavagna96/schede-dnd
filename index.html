@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=226">
+<link rel="stylesheet" href="css/styles.css?v=227">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -400,11 +400,11 @@
     <div class="subpanel" data-subpanel="traits">
       <div class="card page-card">
       <div class="card">
-        <h2 class="card-title sec">Privilegi di Classe &amp; Aure</h2>
+        <h2 class="card-title sec">Privilegi di Classe &amp; Aure <small>tocca per i dettagli</small></h2>
         <div id="class-traits-list"></div>
       </div>
       <div class="card">
-        <h2 class="card-title sec" id="species-traits-title">Tratti</h2>
+        <h2 class="card-title sec"><span id="species-traits-title">Tratti</span> <small>tocca per i dettagli</small></h2>
         <div id="species-traits-list"></div>
       </div>
       <div class="card">
@@ -704,6 +704,17 @@
   </div>
 </div>
 
+<div id="create-choice-overlay" class="hidden" role="dialog" aria-modal="true">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2 class="sheet-title" id="create-choice-title"></h2>
+      <button type="button" class="sheet-close" id="create-choice-close" aria-label="Chiudi">✕</button>
+    </div>
+    <div class="sheet-body" id="create-choice-body"></div>
+  </div>
+</div>
+
 <div id="hp-modal" class="hp-modal hidden" role="dialog" aria-modal="true" aria-label="Modifica punti ferita">
   <div class="hp-modal-sheet">
     <div class="sheet-handle"></div>
@@ -923,33 +934,33 @@
   <button type="button" class="app-menu-logout" id="menu-logout">Esci</button>
 </aside>
 
-<script src="js/firebase-config.js?v=226"></script>
-<script src="js/manual-55.js?v=226"></script>
-<script src="js/config.js?v=226"></script>
-<script src="js/storage.js?v=226"></script>
-<script src="js/engine.js?v=226"></script>
-<script src="js/hp-bar.js?v=226"></script>
-<script src="js/header.js?v=226"></script>
-<script src="js/stats.js?v=226"></script>
-<script src="js/traits.js?v=226"></script>
-<script src="js/sheet.js?v=226"></script>
-<script src="js/grimorio.js?v=226"></script>
-<script src="js/grimorio-advanced.js?v=226"></script>
-<script src="js/manual-browse.js?v=226"></script>
-<script src="js/treasury.js?v=226"></script>
-<script src="js/diary.js?v=226"></script>
-<script src="js/inspiration.js?v=226"></script>
-<script src="js/bottom-sheet.js?v=226"></script>
-<script src="js/edit-sheet.js?v=226"></script>
-<script src="js/items.js?v=226"></script>
-<script src="js/equip.js?v=226"></script>
-<script src="js/levelup.js?v=226"></script>
-<script src="js/menu.js?v=226"></script>
-<script src="js/app.js?v=226"></script>
-<script src="js/faceid.js?v=226"></script>
-<script src="js/dashboard.js?v=226"></script>
-<script src="js/create.js?v=226"></script>
-<script src="js/portrait.js?v=226"></script>
-<script type="module" src="js/cloud.js?v=226"></script>
+<script src="js/firebase-config.js?v=227"></script>
+<script src="js/manual-55.js?v=227"></script>
+<script src="js/config.js?v=227"></script>
+<script src="js/storage.js?v=227"></script>
+<script src="js/engine.js?v=227"></script>
+<script src="js/hp-bar.js?v=227"></script>
+<script src="js/header.js?v=227"></script>
+<script src="js/stats.js?v=227"></script>
+<script src="js/traits.js?v=227"></script>
+<script src="js/sheet.js?v=227"></script>
+<script src="js/grimorio.js?v=227"></script>
+<script src="js/grimorio-advanced.js?v=227"></script>
+<script src="js/manual-browse.js?v=227"></script>
+<script src="js/treasury.js?v=227"></script>
+<script src="js/diary.js?v=227"></script>
+<script src="js/inspiration.js?v=227"></script>
+<script src="js/bottom-sheet.js?v=227"></script>
+<script src="js/edit-sheet.js?v=227"></script>
+<script src="js/items.js?v=227"></script>
+<script src="js/equip.js?v=227"></script>
+<script src="js/levelup.js?v=227"></script>
+<script src="js/menu.js?v=227"></script>
+<script src="js/app.js?v=227"></script>
+<script src="js/faceid.js?v=227"></script>
+<script src="js/dashboard.js?v=227"></script>
+<script src="js/create.js?v=227"></script>
+<script src="js/portrait.js?v=227"></script>
+<script type="module" src="js/cloud.js?v=227"></script>
 </body>
 </html>

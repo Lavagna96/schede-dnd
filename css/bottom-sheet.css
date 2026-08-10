@@ -3,7 +3,8 @@
 #item-sheet-overlay,
 #levelup-sheet-overlay,
 #grim-advanced-overlay,
-#equip-sheet-overlay {
+#equip-sheet-overlay,
+#create-choice-overlay {
   position: fixed;
   inset: 0;
   z-index: 80;
@@ -18,8 +19,17 @@
 #item-sheet-overlay.hidden,
 #levelup-sheet-overlay.hidden,
 #grim-advanced-overlay.hidden,
-#equip-sheet-overlay.hidden {
+#equip-sheet-overlay.hidden,
+#create-choice-overlay.hidden {
   display: none !important;
+}
+
+/* Il wizard di creazione (.create-view, css/components/create.css) sta a
+   z-index 260 — sopra la dashboard, sotto il login — quindi il suo popup di
+   scelta deve stare sopra di lui, non al livello generico 80 di qui sopra
+   (pensato per sedere sopra #main-content). */
+#create-choice-overlay {
+  z-index: 270;
 }
 
 .bottom-sheet {

@@ -187,6 +187,10 @@
     ft.className = 'ft';
     ft.textContent = card.name;
     head.appendChild(ft);
+    var chevron = document.createElement('span');
+    chevron.className = 'feat-chevron';
+    chevron.textContent = '›';
+    head.appendChild(chevron);
     div.appendChild(head);
 
     var fd = document.createElement('div');

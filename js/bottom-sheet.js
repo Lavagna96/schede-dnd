@@ -86,6 +86,19 @@
             open(detail.title, detail.body);
           }
         }
+
+        return;
+      }
+
+      // Card dei Tratti (js/traits.js): il testo mostrato è già troncato, un
+      // singolo tap apre il dettaglio completo invece di richiedere la
+      // pressione lunga (poco scopribile e assente su click da mouse).
+      var feat = e.target.closest('.feat.pressable');
+      if (feat) {
+        var featDetail = getDetail(feat);
+        if (featDetail) {
+          open(featDetail.title, featDetail.body);
+        }
       }
     });
   }

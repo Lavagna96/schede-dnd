@@ -59,7 +59,7 @@
   var draft = {
     name: '', speciesId: null, classId: null,
     // Scelte legate alla specie (5.B.6), una per ogni specie che ne prevede
-    // una nel manuale — vedi SPECIES_REQUIRED_CHOICE e renderSpeciesChoice.
+    // una nel manuale — vedi SPECIES_REQUIRED_CHOICE e appendSpeciesChoices.
     dragonAncestryId: null, elfLineageId: null, elfSkillId: null,
     goliathGiftId: null, tieflingLegacyId: null, gnomeLineageId: null,
     scoreMethod: 'pointbuy',
@@ -710,6 +710,203 @@
     });
   }
 
+  // Descrizione di una riga d'opzione nel popup di scelta (alternativa B tra
+  // 3 con preview, sostituisce la vecchia <select> con nomi soli): stessi
+  // campi già usati per generare il testo del tratto in js/traits.js, solo
+  // riformattati in una frase breve — nessun dato nuovo, tutto verificato
+  // sul manuale (vedi manual-55.js per le fonti).
+  function dragonAncestorDesc(a) {
+    return 'Danno ' + a.dmg + ': determina il tipo di danno del Soffio e della Resistenza al danno.';
+  }
+
+  function elfLineageDesc(l) {
+    var parts = ['Trucchetto: ' + l.cantrip + '.', 'Scurovisione ' + l.darkvisionM + ' m.'];
+    if (l.speedBonusM) {
+      parts.push('+' + l.speedBonusM.toLocaleString('it-IT') + ' m di velocità.');
+    }
+    var higher = [];
+    if (l.level3) {
+      higher.push(l.level3 + ' (dal 3° livello)');
+    }
+    if (l.level5) {
+      higher.push(l.level5 + ' (dal 5°)');
+    }
+    if (higher.length) {
+      parts.push('Incantesimo sempre preparato: ' + higher.join(', ') + '.');
+    }
+
+    return parts.join(' ');
+  }
+
+  function tieflingLegacyDesc(l) {
+    var parts = ['Resistenza ' + l.resist + '.', 'Trucchetto: ' + l.cantrip + '.'];
+    var higher = [];
+    if (l.level3) {
+      higher.push(l.level3 + ' (dal 3°)');
+    }
+    if (l.level5) {
+      higher.push(l.level5 + ' (dal 5°)');
+    } else if (l.level5 === null) {
+      higher.push('un incantesimo di 5° livello da verificare sul manuale (dal 5°)');
+    }
+    if (higher.length) {
+      parts.push('Incantesimo sempre preparato: ' + higher.join(', ') + '.');
+    }
+
+    return parts.join(' ');
+  }
+
+  function gnomeLineageDesc(l) {
+    var parts = ['Trucchetto: ' + l.cantrip + '.'];
+    if (l.preparedSpell) {
+      parts.push('Incantesimo sempre preparato: ' + l.preparedSpell + ' (usi pari al bonus di competenza per riposo lungo).');
+    } else if (l.desc) {
+      parts.push(l.desc);
+    }
+
+    return parts.join(' ');
+  }
+
+  // Popup di scelta condiviso da tutte le specie con un'opzione obbligatoria
+  // (alternativa B tra 3 con preview): un tocco sulla card apre subito tutte
+  // le opzioni con la descrizione intera, invece di una <select> con nomi
+  // soli in fondo alla lista delle specie. Riusa il markup/CSS del bottom
+  // sheet di sola lettura (css/bottom-sheet.css) ma con un overlay tutto suo
+  // (#create-choice-overlay), sullo stesso modello di js/edit-sheet.js.
+  var choiceOverlay, choiceTitleEl, choiceBodyEl;
+
+  function closeChoiceModal() {
+    if (choiceOverlay) {
+      choiceOverlay.classList.add('hidden');
+    }
+    if (choiceBodyEl) {
+      choiceBodyEl.textContent = '';
+    }
+  }
+
+  function openChoiceModal(opts) {
+    if (!choiceOverlay) {
+      return;
+    }
+    choiceTitleEl.textContent = opts.label;
+    choiceBodyEl.textContent = '';
+
+    Object.keys(opts.table).forEach(function (id) {
+      var entry = opts.table[id];
+      var row = el('div', 'choice-opt' + (draft[opts.field] === id ? ' sel' : ''));
+      row.appendChild(el('div', 'choice-opt-radio'));
+
+      var body = el('div');
+      body.appendChild(el('div', 'choice-opt-name', opts.getName(entry)));
+      var descText = opts.getDesc(entry);
+      if (descText) {
+        body.appendChild(el('div', 'choice-opt-desc', descText));
+      }
+      row.appendChild(body);
+
+      row.addEventListener('click', function () {
+        draft[opts.field] = id;
+        closeChoiceModal();
+        opts.onChange();
+      });
+      choiceBodyEl.appendChild(row);
+    });
+
+    choiceOverlay.classList.remove('hidden');
+  }
+
+  // Riga sotto la card della specie scelta: un'etichetta compatta col nome
+  // già scelto (matita per cambiarlo) oppure un pulsante per aprire il
+  // popup — mai una tendina anonima in fondo a tutta la lista delle specie.
+  function buildChoiceSlotField(opts) {
+    var field = el('div', 'choice-slot-field');
+
+    var current = draft[opts.field] ? opts.table[draft[opts.field]] : null;
+    if (current) {
+      var chip = el('div', 'choice-chip');
+      var chipText = document.createElement('span');
+      chipText.innerHTML = opts.chipLabel + ': <b>' + opts.getName(current) + '</b>';
+      chip.appendChild(chipText);
+      var editBtn = el('button', 'choice-chip-edit', '✎');
+      editBtn.type = 'button';
+      editBtn.setAttribute('aria-label', 'Cambia scelta');
+      editBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openChoiceModal(opts);
+      });
+      chip.appendChild(editBtn);
+      field.appendChild(chip);
+    } else {
+      var btn = el('button', 'choice-pick-btn', opts.cta);
+      btn.type = 'button';
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openChoiceModal(opts);
+      });
+      field.appendChild(btn);
+    }
+
+    return field;
+  }
+
+  // Scelte legate alla specie (5.B.6): ognuna determina un tipo di danno,
+  // una velocità o una risorsa che poi si riflette davvero in scheda
+  // (js/engine.js, js/stats.js) e nelle descrizioni dei tratti
+  // (js/traits.js), non solo testo informativo. Lo slot risultante va
+  // inserito subito sotto la card della specie scelta (mai dentro di lei:
+  // è un <button>, non può contenere altri controlli interattivi).
+  function appendSpeciesChoices(slot, speciesId, onChange) {
+    var manual = window.MANUAL_55;
+
+    if (speciesId === 'dragonide') {
+      slot.appendChild(buildChoiceSlotField({
+        label: 'Ascendenza draconica', chipLabel: 'Ascendenza',
+        cta: 'Scegli l\'Ascendenza draconica →',
+        table: manual.dragonAncestors || {}, field: 'dragonAncestryId', onChange: onChange,
+        getName: function (a) { return a.name; }, getDesc: dragonAncestorDesc
+      }));
+    } else if (speciesId === 'elfo') {
+      slot.appendChild(buildChoiceSlotField({
+        label: 'Retaggio Elfico', chipLabel: 'Retaggio',
+        cta: 'Scegli il Retaggio Elfico →',
+        table: manual.elfLineages || {}, field: 'elfLineageId', onChange: onChange,
+        getName: function (l) { return l.name; }, getDesc: elfLineageDesc
+      }));
+      slot.appendChild(buildChoiceSlotField({
+        label: 'Sensi Acuti — competenza', chipLabel: 'Sensi Acuti',
+        cta: 'Scegli la competenza dei Sensi Acuti →',
+        table: {
+          intuizione: { label: 'Intuizione' }, percezione: { label: 'Percezione' },
+          sopravvivenza: { label: 'Sopravvivenza' }
+        },
+        field: 'elfSkillId', onChange: onChange,
+        getName: function (s) { return s.label; },
+        getDesc: function () { return 'Diventi competente in questa prova di caratteristica.'; }
+      }));
+    } else if (speciesId === 'goliath') {
+      slot.appendChild(buildChoiceSlotField({
+        label: 'Dono dell\'Ascendenza dei Giganti', chipLabel: 'Dono',
+        cta: 'Scegli il Dono dell\'Ascendenza →',
+        table: manual.goliathGifts || {}, field: 'goliathGiftId', onChange: onChange,
+        getName: function (g) { return g.name; }, getDesc: function (g) { return g.desc; }
+      }));
+    } else if (speciesId === 'tiefling') {
+      slot.appendChild(buildChoiceSlotField({
+        label: 'Retaggio Infernale', chipLabel: 'Retaggio',
+        cta: 'Scegli il Retaggio Infernale →',
+        table: manual.tieflingLegacies || {}, field: 'tieflingLegacyId', onChange: onChange,
+        getName: function (l) { return l.name; }, getDesc: tieflingLegacyDesc
+      }));
+    } else if (speciesId === 'gnomo') {
+      slot.appendChild(buildChoiceSlotField({
+        label: 'Retaggio Gnomesco', chipLabel: 'Retaggio',
+        cta: 'Scegli il Retaggio Gnomesco →',
+        table: manual.gnomeLineages || {}, field: 'gnomeLineageId', onChange: onChange,
+        getName: function (l) { return l.name; }, getDesc: gnomeLineageDesc
+      }));
+    }
+  }
+
   function renderSpecie(container) {
     // Campo nome personaggio.
     var label = el('label', 'create-label', 'Nome del personaggio');
@@ -731,92 +928,46 @@
     var list = el('div', 'pick-list');
     container.appendChild(list);
 
-    var choiceBox = el('div');
-    container.appendChild(choiceBox);
-
     // Campi del draft da azzerare quando si cambia specie (nessuna scelta
     // di una specie precedente resta valida per quella nuova).
     var SPECIES_CHOICE_FIELDS = ['dragonAncestryId', 'elfLineageId', 'elfSkillId',
       'goliathGiftId', 'tieflingLegacyId', 'gnomeLineageId'];
 
-    Object.keys(window.MANUAL_55.species).forEach(function (id) {
-      var sp = window.MANUAL_55.species[id];
-      var row = buildSpeciesRow(sp, id, id === draft.speciesId);
+    // Ricostruisce tutta la lista: necessario perché lo slot di scelta (se
+    // la specie ne ha una) va agganciato subito dopo la riga appena scelta,
+    // non in un contenitore fisso in fondo alla pagina.
+    function renderList() {
+      list.textContent = '';
 
-      row.addEventListener('click', function () {
-        if (draft.speciesId !== id) {
-          SPECIES_CHOICE_FIELDS.forEach(function (f) { draft[f] = null; });
-        }
-        draft.speciesId = id;
-        list.querySelectorAll('.pick-row').forEach(function (t) {
-          t.classList.toggle('on', t === row);
+      Object.keys(window.MANUAL_55.species).forEach(function (id) {
+        var sp = window.MANUAL_55.species[id];
+        var row = buildSpeciesRow(sp, id, id === draft.speciesId);
+
+        row.addEventListener('click', function () {
+          if (draft.speciesId !== id) {
+            SPECIES_CHOICE_FIELDS.forEach(function (f) { draft[f] = null; });
+          }
+          draft.speciesId = id;
+          renderList();
+          updateNav();
         });
-        renderSpeciesChoice();
-        updateNav();
-      });
 
-      list.appendChild(row);
-    });
+        list.appendChild(row);
 
-    // Select generico "scegli tra le chiavi di una tabella del manuale":
-    // usato per ascendenza draconica, retaggio elfico/gnomesco, dono del
-    // Goliath e retaggio infernale — stessa UI (menu a tendina), stesso
-    // comportamento (nessuna preselezione, valore in draft[field]).
-    function appendChoiceSelect(labelText, table, getOptionLabel, field) {
-      choiceBox.appendChild(el('div', 'create-label', labelText));
-      var select = document.createElement('select');
-      select.className = 'edit-select';
-      var placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.textContent = '— scegli —';
-      select.appendChild(placeholder);
-      Object.keys(table).forEach(function (id) {
-        var opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = getOptionLabel(table[id]);
-        if (draft[field] === id) {
-          opt.selected = true;
+        if (id === draft.speciesId) {
+          var slot = el('div', 'species-choice-slot');
+          appendSpeciesChoices(slot, id, function () {
+            renderList();
+            updateNav();
+          });
+          if (slot.childNodes.length) {
+            list.appendChild(slot);
+          }
         }
-        select.appendChild(opt);
       });
-      select.addEventListener('change', function () {
-        draft[field] = select.value || null;
-        updateNav();
-      });
-      choiceBox.appendChild(select);
     }
 
-    // Scelte legate alla specie (5.B.6): ognuna determina un tipo di danno,
-    // una velocità o una risorsa che poi si riflette davvero in scheda
-    // (js/engine.js, js/stats.js) e nelle descrizioni dei tratti
-    // (js/traits.js), non solo testo informativo.
-    function renderSpeciesChoice() {
-      choiceBox.textContent = '';
-      var manual = window.MANUAL_55;
-
-      if (draft.speciesId === 'dragonide') {
-        appendChoiceSelect('Ascendenza draconica', manual.dragonAncestors || {},
-          function (a) { return a.name + ' — ' + a.dmg; }, 'dragonAncestryId');
-      } else if (draft.speciesId === 'elfo') {
-        appendChoiceSelect('Retaggio Elfico', manual.elfLineages || {},
-          function (l) { return l.name; }, 'elfLineageId');
-        appendChoiceSelect('Sensi Acuti — competenza', {
-          intuizione: { label: 'Intuizione' }, percezione: { label: 'Percezione' },
-          sopravvivenza: { label: 'Sopravvivenza' }
-        }, function (s) { return s.label; }, 'elfSkillId');
-      } else if (draft.speciesId === 'goliath') {
-        appendChoiceSelect('Dono dell\'Ascendenza dei Giganti', manual.goliathGifts || {},
-          function (g) { return g.name; }, 'goliathGiftId');
-      } else if (draft.speciesId === 'tiefling') {
-        appendChoiceSelect('Retaggio Infernale', manual.tieflingLegacies || {},
-          function (l) { return l.name + ' — resistenza ' + l.resist; }, 'tieflingLegacyId');
-      } else if (draft.speciesId === 'gnomo') {
-        appendChoiceSelect('Retaggio Gnomesco', manual.gnomeLineages || {},
-          function (l) { return l.name; }, 'gnomeLineageId');
-      }
-    }
-
-    renderSpeciesChoice();
+    renderList();
   }
 
   // Le specie con una scelta obbligatoria allo step Specie (5.B.6): id del
@@ -2756,6 +2907,21 @@
     }
     backBtn.addEventListener('click', back);
     nextBtn.addEventListener('click', next);
+
+    choiceOverlay = document.getElementById('create-choice-overlay');
+    choiceTitleEl = document.getElementById('create-choice-title');
+    choiceBodyEl = document.getElementById('create-choice-body');
+    var choiceCloseBtn = document.getElementById('create-choice-close');
+    if (choiceCloseBtn) {
+      choiceCloseBtn.addEventListener('click', closeChoiceModal);
+    }
+    if (choiceOverlay) {
+      choiceOverlay.addEventListener('click', function (e) {
+        if (e.target === choiceOverlay) {
+          closeChoiceModal();
+        }
+      });
+    }
   }
 
   window.AppCreate = {
