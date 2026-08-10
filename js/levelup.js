@@ -863,24 +863,25 @@
 
       window.AppStorage.saveState(state, true);
 
-      if (window.AppHeader && window.AppHeader.render) {
-        window.AppHeader.render();
-      }
-      if (window.AppStats && window.AppStats.render) {
-        window.AppStats.render();
-      }
-      if (window.AppTraits && window.AppTraits.render) {
-        window.AppTraits.render();
-      }
-      if (window.AppSheet && window.AppSheet.render) {
-        window.AppSheet.render();
-      }
-      if (window.AppGrimorio && window.AppGrimorio.render) {
-        window.AppGrimorio.render();
-      }
-
+      // Il salvataggio è già avvenuto: chiudere il pannello e nascondere il
+      // bottone (se il livello è ora 20) non deve dipendere dal refresh
+      // visivo dei moduli qui sotto. Prima si chiude, poi si aggiorna la
+      // scheda — un modulo che va in errore non lascia più il popup aperto
+      // con il livello già cambiato sotto (bug segnalato: "il livello cambia
+      // ma il popup rimane aperto", causa un'eccezione in uno dei render
+      // successivi che interrompeva l'esecuzione prima di closeSheet()).
       closeSheet();
-      render(); // nasconde il bottone se il livello è ora 20
+      render();
+
+      ['AppHeader', 'AppStats', 'AppTraits', 'AppSheet', 'AppGrimorio'].forEach(function (name) {
+        if (window[name] && window[name].render) {
+          try {
+            window[name].render();
+          } catch (e) {
+            console.error('[levelup] render fallito dopo la conferma:', name, e);
+          }
+        }
+      });
     }
 
     /* ---------- costruzione del foglio ---------- */
