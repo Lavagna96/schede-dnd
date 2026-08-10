@@ -1,0 +1,45 @@
+/* Banner "nuova versione disponibile" (fix PWA iOS: la webview non ricarica
+   da sola dopo un deploy, vedi js/update-check.js). Fascia in alto, sopra
+   qualunque altro overlay, per restare visibile anche dentro un pannello. */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+  background: linear-gradient(135deg, var(--gold-mid), var(--accent-gold-dim));
+  color: #1a1509;
+  box-shadow: var(--shadow-md);
+}
+
+.update-banner-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.update-banner-btn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: none;
+  background: #1a1509;
+  color: var(--accent-gold);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.update-banner-close {
+  padding: var(--space-1);
+  border: none;
+  background: transparent;
+  color: #1a1509;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+}
