@@ -55,7 +55,7 @@ button {
   font-family: inherit;
 }
 
-button:not(.edit-del):not(.ds-reset):not(.ds-pip):not(.quest-check):not(.qbtn):not(.qpill-cycle):not(.qdel):not(.header-options):not(.res-rest-btn):not(.levelup-btn):not(.row-menu-btn),
+button:not(.edit-del):not(.ds-reset):not(.ds-pip):not(.quest-check):not(.qbtn):not(.btn-activate):not(.qdel):not(.header-options):not(.res-rest-btn):not(.levelup-btn):not(.row-menu-btn),
 .btn, .nav-link, .subtab, .fab {
   min-width: var(--touch-min);
   min-height: var(--touch-min);
@@ -84,7 +84,7 @@ button:not(.edit-del):not(.ds-reset):not(.ds-pip):not(.quest-check):not(.qbtn):n
   .seg,
   .accordion-header,
   .qpanel-head,
-  .qpill-cycle,
+  .btn-activate,
   .qdel,
   .insp-tile,
   .ds-reset,
@@ -122,7 +122,7 @@ button:not(.edit-del):not(.ds-reset):not(.ds-pip):not(.quest-check):not(.qbtn):n
   .seg:active,
   .accordion-header:active,
   .qpanel-head:active,
-  .qpill-cycle:active,
+  .btn-activate:active,
   .qdel:active,
   .insp-tile:active
 ) {

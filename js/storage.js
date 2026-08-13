@@ -105,7 +105,7 @@
     coins: { mp: 0, mo: 0, ma: 0, mr: 0 },
     steed: { name: '' },
     treasury: { carryMax: 150, partyItems: [], personalItems: [] },
-    diary: { sessions: [], png: [], quests: { active: [], completed: [] } },
+    diary: { sessions: [], png: [], quests: { active: null, todo: [], completed: [] } },
     inspiration: false,
     deathSaves: { success: 0, fail: 0 },
     grimoire: { prepared: [], cantrips: [], always: [] }
@@ -248,7 +248,7 @@
     next.treasury = Object.assign(deepClone(base.treasury), parsed.treasury || {});
     next.diary = Object.assign(deepClone(base.diary), parsed.diary || {});
     if (parsed.diary && parsed.diary.quests) {
-      next.diary.quests = Object.assign({ active: [], completed: [] }, parsed.diary.quests);
+      next.diary.quests = Object.assign({ active: null, todo: [], completed: [] }, parsed.diary.quests);
     }
     if (parsed.inspiration != null) {
       next.inspiration = parsed.inspiration;

@@ -112,42 +112,31 @@
   border-color: var(--accent-gold-dim);
 }
 
-.qstatus {
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid transparent;
-  font-family: var(--font-body);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.qpill-cycle {
-  cursor: pointer;
-}
-
-.qstatus.stato-da-iniziare {
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--border-color);
-}
-
-.qstatus.stato-in-corso {
-  color: #bfe9d4;
-  background: rgba(61, 148, 112, 0.18);
-  border-color: rgba(61, 148, 112, 0.5);
-}
-
-.qstatus.stato-in-pausa {
-  color: #f0c48f;
-  background: rgba(201, 122, 42, 0.18);
-  border-color: rgba(201, 122, 42, 0.5);
+.qpanel.active-slot {
+  border-color: var(--border-gold);
+  background: rgba(201, 164, 67, 0.08);
 }
 
 .qfoot {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
   margin-top: var(--space-2);
+}
+
+.btn-activate {
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent-gold-dim);
+  background: rgba(201, 164, 67, 0.12);
+  color: var(--accent-gold);
+  cursor: pointer;
+}
+
+.btn-activate:active {
+  background: rgba(201, 164, 67, 0.22);
 }
 
 .qdel {

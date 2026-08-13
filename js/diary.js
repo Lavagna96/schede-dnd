@@ -132,22 +132,6 @@
     });
   }
 
-  var QUEST_STATUSES = [
-    { key: 'da-iniziare', label: 'Da iniziare' },
-    { key: 'in-corso', label: 'In corso' },
-    { key: 'in-pausa', label: 'In pausa' }
-  ];
-
-  function statusLabel(key) {
-    for (var i = 0; i < QUEST_STATUSES.length; i++) {
-      if (QUEST_STATUSES[i].key === key) {
-        return QUEST_STATUSES[i].label;
-      }
-    }
-
-    return QUEST_STATUSES[0].label;
-  }
-
   function normalizeQuest(quest) {
     var changed = false;
     if (quest.title == null) {
@@ -166,160 +150,250 @@
       quest.description = '';
       changed = true;
     }
-    if (quest.status == null || !statusLabel(quest.status)) {
-      quest.status = 'da-iniziare';
+    if (quest.status != null) {
+      delete quest.status;
       changed = true;
     }
 
     return changed;
   }
 
-  function renderQuestList(containerId, arr, completed) {
-    var container = document.getElementById(containerId);
-    if (!container) {
-      return;
-    }
-    container.innerHTML = '';
-    if (arr.length === 0) {
-      container.innerHTML = '<p class="diary-empty">Nessuna missione.</p>';
-
-      return;
-    }
-    var state = window.AppStorage.getState();
-    arr.forEach(function (quest, i) {
-      var panel = document.createElement('div');
-      panel.className = 'qpanel' + (completed ? ' done' : '');
-
-      var head = document.createElement('div');
-      head.className = 'qpanel-head';
-
-      var check = document.createElement('button');
-      check.type = 'button';
-      check.className = 'quest-check' + (completed ? ' checked' : '');
-      check.textContent = completed ? '✓' : '';
-      check.setAttribute('aria-label', completed ? 'Segna attiva' : 'Segna completata');
-
-      var titleInp = document.createElement('input');
-      titleInp.type = 'text';
-      titleInp.className = 'session-title-input';
-      titleInp.value = quest.title || '';
-      titleInp.setAttribute('placeholder', 'Titolo missione');
-      titleInp.setAttribute('aria-label', 'Titolo missione');
-
-      var pill = null;
-      if (!completed) {
-        pill = document.createElement('button');
-        pill.type = 'button';
-        pill.className = 'qstatus qpill-cycle stato-' + quest.status;
-        pill.textContent = statusLabel(quest.status);
-        pill.setAttribute('aria-label', 'Cambia stato avanzamento');
-      }
-
-      var chevron = document.createElement('span');
-      chevron.className = 'qchevron';
-      chevron.textContent = '▼';
-      chevron.setAttribute('aria-hidden', 'true');
-
-      head.appendChild(check);
-      head.appendChild(titleInp);
-      if (pill) {
-        head.appendChild(pill);
-      }
-      head.appendChild(chevron);
-
-      var body = document.createElement('div');
-      body.className = 'qpanel-body';
-      body.innerHTML =
-        '<div class="qfield"><label>Obiettivo</label><input type="text" class="q-objective" placeholder="Obiettivo della missione"></div>' +
-        '<div class="qfield"><label>Descrizione</label><textarea class="q-desc" placeholder="Descrizione, indizi, sviluppi..."></textarea></div>' +
-        '<div class="qfoot"><button type="button" class="qdel">Elimina missione</button></div>';
-      var objectiveInp = body.querySelector('.q-objective');
-      var descInp = body.querySelector('.q-desc');
-      objectiveInp.value = quest.objective || '';
-      descInp.value = quest.description || '';
-
-      panel.appendChild(head);
-      panel.appendChild(body);
-
-      head.addEventListener('click', function (e) {
-        if (e.target === titleInp || e.target === check || e.target === pill) {
-          return;
-        }
-        panel.classList.toggle('open');
-      });
-
-      check.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var removed = arr.splice(i, 1)[0];
-        if (completed) {
-          state.diary.quests.active.push(removed);
+  /* Migra dal vecchio formato (quests.active[] con campo status) al nuovo:
+     una sola missione attiva alla volta (quests.active singola o null) più
+     una lista "da iniziare" (quests.todo). La prima missione con
+     status === 'in-corso' trovata diventa l'attiva; le altre finiscono
+     tra le "da iniziare". */
+  function migrateQuestsShape(quests) {
+    var changed = false;
+    if (Array.isArray(quests.active)) {
+      var picked = null;
+      var leftover = [];
+      quests.active.forEach(function (q) {
+        if (!picked && q.status === 'in-corso') {
+          picked = q;
         } else {
-          state.diary.quests.completed.push(removed);
+          leftover.push(q);
         }
-        window.AppStorage.saveState(state);
-        renderQuests();
       });
-
-      titleInp.addEventListener('click', function (e) { e.stopPropagation(); });
-      titleInp.addEventListener('input', function () {
-        quest.title = titleInp.value;
-        window.AppStorage.saveState(state);
-      });
-
-      if (pill) {
-        pill.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var idx = 0;
-          for (var s = 0; s < QUEST_STATUSES.length; s++) {
-            if (QUEST_STATUSES[s].key === quest.status) {
-              idx = s;
-              break;
-            }
-          }
-          var next = QUEST_STATUSES[(idx + 1) % QUEST_STATUSES.length];
-          quest.status = next.key;
-          pill.className = 'qstatus qpill-cycle stato-' + next.key;
-          pill.textContent = next.label;
-          window.AppStorage.saveState(state);
-        });
+      quests.todo = (quests.todo || []).concat(leftover);
+      quests.active = picked || null;
+      changed = true;
+    }
+    if (quests.active === undefined) {
+      quests.active = null;
+      changed = true;
+    }
+    if (!Array.isArray(quests.todo)) {
+      quests.todo = [];
+      changed = true;
+    }
+    if (!Array.isArray(quests.completed)) {
+      quests.completed = [];
+      changed = true;
+    }
+    if (quests.active && normalizeQuest(quests.active)) {
+      changed = true;
+    }
+    quests.todo.forEach(function (q) {
+      if (normalizeQuest(q)) {
+        changed = true;
       }
-
-      objectiveInp.addEventListener('input', function () {
-        quest.objective = objectiveInp.value;
-        window.AppStorage.saveState(state);
-      });
-      descInp.addEventListener('input', function () {
-        quest.description = descInp.value;
-        window.AppStorage.saveState(state);
-      });
-      body.querySelector('.qdel').addEventListener('click', function () {
-        arr.splice(i, 1);
-        window.AppStorage.saveState(state);
-        renderQuests();
-      });
-
-      container.appendChild(panel);
     });
+    quests.completed.forEach(function (q) {
+      if (normalizeQuest(q)) {
+        changed = true;
+      }
+    });
+
+    return changed;
+  }
+
+  function buildQuestPanel(quest, opts) {
+    var panel = document.createElement('div');
+    panel.className = 'qpanel' + (opts.done ? ' done' : '') + (opts.activeSlot ? ' active-slot' : '');
+
+    var head = document.createElement('div');
+    head.className = 'qpanel-head';
+
+    var check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'quest-check' + (opts.done ? ' checked' : '');
+    check.textContent = opts.done ? '✓' : '';
+    check.setAttribute('aria-label', opts.done ? 'Segna da iniziare' : 'Segna completata');
+
+    var titleInp = document.createElement('input');
+    titleInp.type = 'text';
+    titleInp.className = 'session-title-input';
+    titleInp.value = quest.title || '';
+    titleInp.setAttribute('placeholder', 'Titolo missione');
+    titleInp.setAttribute('aria-label', 'Titolo missione');
+
+    var chevron = document.createElement('span');
+    chevron.className = 'qchevron';
+    chevron.textContent = '▼';
+    chevron.setAttribute('aria-hidden', 'true');
+
+    head.appendChild(check);
+    head.appendChild(titleInp);
+    head.appendChild(chevron);
+
+    var body = document.createElement('div');
+    body.className = 'qpanel-body';
+    body.innerHTML =
+      '<div class="qfield"><label>Obiettivo</label><input type="text" class="q-objective" placeholder="Obiettivo della missione"></div>' +
+      '<div class="qfield"><label>Descrizione</label><textarea class="q-desc" placeholder="Descrizione, indizi, sviluppi..."></textarea></div>' +
+      '<div class="qfoot">' +
+        (opts.showActivate ? '<button type="button" class="btn-activate">Attiva missione</button>' : '') +
+        '<button type="button" class="qdel">Elimina missione</button>' +
+      '</div>';
+    var objectiveInp = body.querySelector('.q-objective');
+    var descInp = body.querySelector('.q-desc');
+    objectiveInp.value = quest.objective || '';
+    descInp.value = quest.description || '';
+
+    panel.appendChild(head);
+    panel.appendChild(body);
+
+    head.addEventListener('click', function (e) {
+      if (e.target === titleInp || e.target === check) {
+        return;
+      }
+      panel.classList.toggle('open');
+    });
+
+    check.addEventListener('click', function (e) {
+      e.stopPropagation();
+      opts.onToggleComplete();
+    });
+
+    titleInp.addEventListener('click', function (e) { e.stopPropagation(); });
+    titleInp.addEventListener('input', function () {
+      quest.title = titleInp.value;
+      opts.onChange();
+    });
+
+    objectiveInp.addEventListener('input', function () {
+      quest.objective = objectiveInp.value;
+      opts.onChange();
+    });
+    descInp.addEventListener('input', function () {
+      quest.description = descInp.value;
+      opts.onChange();
+    });
+    body.querySelector('.qdel').addEventListener('click', function () {
+      opts.onDelete();
+    });
+    if (opts.showActivate) {
+      body.querySelector('.btn-activate').addEventListener('click', function (e) {
+        e.stopPropagation();
+        opts.onActivate();
+      });
+    }
+
+    return panel;
   }
 
   function renderQuests() {
     var state = window.AppStorage.getState();
-    var changed = false;
-    state.diary.quests.active.forEach(function (q) {
-      if (normalizeQuest(q)) {
-        changed = true;
-      }
-    });
-    state.diary.quests.completed.forEach(function (q) {
-      if (normalizeQuest(q)) {
-        changed = true;
-      }
-    });
-    if (changed) {
+    var quests = state.diary.quests;
+    if (migrateQuestsShape(quests)) {
       window.AppStorage.saveState(state);
     }
-    renderQuestList('quest-active', state.diary.quests.active, false);
-    renderQuestList('quest-completed', state.diary.quests.completed, true);
+
+    function persist() {
+      window.AppStorage.saveState(state);
+    }
+
+    var activeContainer = document.getElementById('quest-active');
+    if (activeContainer) {
+      activeContainer.innerHTML = '';
+      if (!quests.active) {
+        activeContainer.innerHTML = '<p class="diary-empty">Nessuna missione attiva. Attivane una da "Da iniziare".</p>';
+      } else {
+        activeContainer.appendChild(buildQuestPanel(quests.active, {
+          done: false,
+          activeSlot: true,
+          showActivate: false,
+          onToggleComplete: function () {
+            quests.completed.push(quests.active);
+            quests.active = null;
+            persist();
+            renderQuests();
+          },
+          onDelete: function () {
+            quests.active = null;
+            persist();
+            renderQuests();
+          },
+          onChange: persist
+        }));
+      }
+    }
+
+    var todoContainer = document.getElementById('quest-todo');
+    if (todoContainer) {
+      todoContainer.innerHTML = '';
+      if (quests.todo.length === 0) {
+        todoContainer.innerHTML = '<p class="diary-empty">Nessuna missione in attesa.</p>';
+      } else {
+        quests.todo.forEach(function (quest, i) {
+          todoContainer.appendChild(buildQuestPanel(quest, {
+            done: false,
+            activeSlot: false,
+            showActivate: true,
+            onToggleComplete: function () {
+              var removed = quests.todo.splice(i, 1)[0];
+              quests.completed.push(removed);
+              persist();
+              renderQuests();
+            },
+            onActivate: function () {
+              var removed = quests.todo.splice(i, 1)[0];
+              if (quests.active) {
+                quests.todo.push(quests.active);
+              }
+              quests.active = removed;
+              persist();
+              renderQuests();
+            },
+            onDelete: function () {
+              quests.todo.splice(i, 1);
+              persist();
+              renderQuests();
+            },
+            onChange: persist
+          }));
+        });
+      }
+    }
+
+    var completedContainer = document.getElementById('quest-completed');
+    if (completedContainer) {
+      completedContainer.innerHTML = '';
+      if (quests.completed.length === 0) {
+        completedContainer.innerHTML = '<p class="diary-empty">Nessuna missione.</p>';
+      } else {
+        quests.completed.forEach(function (quest, i) {
+          completedContainer.appendChild(buildQuestPanel(quest, {
+            done: true,
+            activeSlot: false,
+            showActivate: false,
+            onToggleComplete: function () {
+              var removed = quests.completed.splice(i, 1)[0];
+              quests.todo.push(removed);
+              persist();
+              renderQuests();
+            },
+            onDelete: function () {
+              quests.completed.splice(i, 1);
+              persist();
+              renderQuests();
+            },
+            onChange: persist
+          }));
+        });
+      }
+    }
   }
 
   function escapeHtml(str) {
@@ -358,16 +432,15 @@
 
   function addQuest() {
     var state = window.AppStorage.getState();
-    state.diary.quests.active.push({
+    state.diary.quests.todo.push({
       id: uid(),
       title: '',
       objective: '',
-      description: '',
-      status: 'da-iniziare'
+      description: ''
     });
     window.AppStorage.saveState(state);
     renderQuests();
-    var inputs = document.querySelectorAll('#quest-active .session-title-input');
+    var inputs = document.querySelectorAll('#quest-todo .session-title-input');
     var last = inputs[inputs.length - 1];
     if (last) {
       var panel = last.closest('.qpanel');
