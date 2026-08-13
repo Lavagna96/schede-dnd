@@ -1,15 +1,32 @@
-.quest-edit-row {
-  flex-wrap: nowrap;
-  align-items: flex-start;
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.quest-edit-row .quest-check {
+.qpanel {
+  border: 1px solid var(--border-gold-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: var(--shadow-sm);
+}
+
+.qpanel-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  min-height: var(--touch-min);
+  cursor: pointer;
+}
+
+.qpanel-head .quest-check {
   flex: 0 0 32px;
   width: 32px;
   height: 32px;
   min-width: 32px;
   min-height: 32px;
-  margin-top: 1px;
   border: 2px solid var(--border-gold-soft);
   border-radius: var(--radius-sm);
   background: var(--bg-principal);
@@ -22,15 +39,128 @@
   padding: 0;
 }
 
-.quest-edit-row .quest-check.checked {
+.qpanel-head .quest-check.checked {
   background: var(--accent-gold);
   color: var(--bg-principal);
   border-color: var(--accent-gold);
 }
 
-.quest-edit-row .edit-main {
-  flex: 1;
-  min-width: 0;
+.qpanel-head .session-title-input {
+  cursor: text;
+}
+
+.qpanel.done .session-title-input {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-color);
+}
+
+.qchevron {
+  color: var(--text-secondary);
+  font-size: 11px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.qpanel.open .qchevron {
+  transform: rotate(180deg);
+}
+
+.qpanel-body {
+  display: none;
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.qpanel.open .qpanel-body {
+  display: block;
+}
+
+.qfield {
+  margin-top: var(--space-2);
+}
+
+.qfield label {
+  display: block;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent-gold-dim);
+  margin-bottom: 4px;
+}
+
+.qfield input[type="text"],
+.qfield textarea {
+  width: 100%;
+  background: var(--bg-principal);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.qfield textarea {
+  min-height: 64px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.qfield input[type="text"]:focus,
+.qfield textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold-dim);
+}
+
+.qstatus {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.qpill-cycle {
+  cursor: pointer;
+}
+
+.qstatus.stato-da-iniziare {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color);
+}
+
+.qstatus.stato-in-corso {
+  color: #bfe9d4;
+  background: rgba(61, 148, 112, 0.18);
+  border-color: rgba(61, 148, 112, 0.5);
+}
+
+.qstatus.stato-in-pausa {
+  color: #f0c48f;
+  background: rgba(201, 122, 42, 0.18);
+  border-color: rgba(201, 122, 42, 0.5);
+}
+
+.qfoot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+.qdel {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.qdel:active {
+  color: var(--ruby-bright);
 }
 
 .quest-section-title {

@@ -132,6 +132,48 @@
     });
   }
 
+  var QUEST_STATUSES = [
+    { key: 'da-iniziare', label: 'Da iniziare' },
+    { key: 'in-corso', label: 'In corso' },
+    { key: 'in-pausa', label: 'In pausa' }
+  ];
+
+  function statusLabel(key) {
+    for (var i = 0; i < QUEST_STATUSES.length; i++) {
+      if (QUEST_STATUSES[i].key === key) {
+        return QUEST_STATUSES[i].label;
+      }
+    }
+
+    return QUEST_STATUSES[0].label;
+  }
+
+  function normalizeQuest(quest) {
+    var changed = false;
+    if (quest.title == null) {
+      quest.title = quest.text || '';
+      changed = true;
+    }
+    if (quest.text != null) {
+      delete quest.text;
+      changed = true;
+    }
+    if (quest.objective == null) {
+      quest.objective = '';
+      changed = true;
+    }
+    if (quest.description == null) {
+      quest.description = '';
+      changed = true;
+    }
+    if (quest.status == null || !statusLabel(quest.status)) {
+      quest.status = 'da-iniziare';
+      changed = true;
+    }
+
+    return changed;
+  }
+
   function renderQuestList(containerId, arr, completed) {
     var container = document.getElementById(containerId);
     if (!container) {
@@ -145,28 +187,69 @@
     }
     var state = window.AppStorage.getState();
     arr.forEach(function (quest, i) {
-      var row = document.createElement('div');
-      row.className = 'edit-row quest-edit-row';
+      var panel = document.createElement('div');
+      panel.className = 'qpanel' + (completed ? ' done' : '');
+
+      var head = document.createElement('div');
+      head.className = 'qpanel-head';
+
       var check = document.createElement('button');
       check.type = 'button';
       check.className = 'quest-check' + (completed ? ' checked' : '');
       check.textContent = completed ? '✓' : '';
       check.setAttribute('aria-label', completed ? 'Segna attiva' : 'Segna completata');
-      var main = document.createElement('div');
-      main.className = 'edit-main';
-      var text = document.createElement('div');
-      text.className = 'edit-name';
-      text.contentEditable = 'true';
-      text.setAttribute('data-ph', 'Descrizione missione');
-      text.textContent = quest.text || '';
-      main.appendChild(text);
-      var del = document.createElement('button');
-      del.className = 'edit-del';
-      del.type = 'button';
-      del.innerHTML = '✕';
-      del.setAttribute('aria-label', 'Elimina');
 
-      check.addEventListener('click', function () {
+      var titleInp = document.createElement('input');
+      titleInp.type = 'text';
+      titleInp.className = 'session-title-input';
+      titleInp.value = quest.title || '';
+      titleInp.setAttribute('placeholder', 'Titolo missione');
+      titleInp.setAttribute('aria-label', 'Titolo missione');
+
+      var pill = null;
+      if (!completed) {
+        pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'qstatus qpill-cycle stato-' + quest.status;
+        pill.textContent = statusLabel(quest.status);
+        pill.setAttribute('aria-label', 'Cambia stato avanzamento');
+      }
+
+      var chevron = document.createElement('span');
+      chevron.className = 'qchevron';
+      chevron.textContent = '▼';
+      chevron.setAttribute('aria-hidden', 'true');
+
+      head.appendChild(check);
+      head.appendChild(titleInp);
+      if (pill) {
+        head.appendChild(pill);
+      }
+      head.appendChild(chevron);
+
+      var body = document.createElement('div');
+      body.className = 'qpanel-body';
+      body.innerHTML =
+        '<div class="qfield"><label>Obiettivo</label><input type="text" class="q-objective" placeholder="Obiettivo della missione"></div>' +
+        '<div class="qfield"><label>Descrizione</label><textarea class="q-desc" placeholder="Descrizione, indizi, sviluppi..."></textarea></div>' +
+        '<div class="qfoot"><button type="button" class="qdel">Elimina missione</button></div>';
+      var objectiveInp = body.querySelector('.q-objective');
+      var descInp = body.querySelector('.q-desc');
+      objectiveInp.value = quest.objective || '';
+      descInp.value = quest.description || '';
+
+      panel.appendChild(head);
+      panel.appendChild(body);
+
+      head.addEventListener('click', function (e) {
+        if (e.target === titleInp || e.target === check || e.target === pill) {
+          return;
+        }
+        panel.classList.toggle('open');
+      });
+
+      check.addEventListener('click', function (e) {
+        e.stopPropagation();
         var removed = arr.splice(i, 1)[0];
         if (completed) {
           state.diary.quests.active.push(removed);
@@ -176,25 +259,65 @@
         window.AppStorage.saveState(state);
         renderQuests();
       });
-      text.addEventListener('input', function () {
-        quest.text = text.textContent;
+
+      titleInp.addEventListener('click', function (e) { e.stopPropagation(); });
+      titleInp.addEventListener('input', function () {
+        quest.title = titleInp.value;
         window.AppStorage.saveState(state);
       });
-      del.addEventListener('click', function () {
+
+      if (pill) {
+        pill.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var idx = 0;
+          for (var s = 0; s < QUEST_STATUSES.length; s++) {
+            if (QUEST_STATUSES[s].key === quest.status) {
+              idx = s;
+              break;
+            }
+          }
+          var next = QUEST_STATUSES[(idx + 1) % QUEST_STATUSES.length];
+          quest.status = next.key;
+          pill.className = 'qstatus qpill-cycle stato-' + next.key;
+          pill.textContent = next.label;
+          window.AppStorage.saveState(state);
+        });
+      }
+
+      objectiveInp.addEventListener('input', function () {
+        quest.objective = objectiveInp.value;
+        window.AppStorage.saveState(state);
+      });
+      descInp.addEventListener('input', function () {
+        quest.description = descInp.value;
+        window.AppStorage.saveState(state);
+      });
+      body.querySelector('.qdel').addEventListener('click', function () {
         arr.splice(i, 1);
         window.AppStorage.saveState(state);
         renderQuests();
       });
 
-      row.appendChild(check);
-      row.appendChild(main);
-      row.appendChild(del);
-      container.appendChild(row);
+      container.appendChild(panel);
     });
   }
 
   function renderQuests() {
     var state = window.AppStorage.getState();
+    var changed = false;
+    state.diary.quests.active.forEach(function (q) {
+      if (normalizeQuest(q)) {
+        changed = true;
+      }
+    });
+    state.diary.quests.completed.forEach(function (q) {
+      if (normalizeQuest(q)) {
+        changed = true;
+      }
+    });
+    if (changed) {
+      window.AppStorage.saveState(state);
+    }
     renderQuestList('quest-active', state.diary.quests.active, false);
     renderQuestList('quest-completed', state.diary.quests.completed, true);
   }
@@ -235,9 +358,24 @@
 
   function addQuest() {
     var state = window.AppStorage.getState();
-    state.diary.quests.active.push({ id: uid(), text: '' });
+    state.diary.quests.active.push({
+      id: uid(),
+      title: '',
+      objective: '',
+      description: '',
+      status: 'da-iniziare'
+    });
     window.AppStorage.saveState(state);
     renderQuests();
+    var inputs = document.querySelectorAll('#quest-active .session-title-input');
+    var last = inputs[inputs.length - 1];
+    if (last) {
+      var panel = last.closest('.qpanel');
+      if (panel) {
+        panel.classList.add('open');
+      }
+      last.focus();
+    }
   }
 
   function render() {
