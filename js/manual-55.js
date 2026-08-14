@@ -13,7 +13,7 @@
  * quando `version` locale è più nuova di quella remota.
  */
 window.MANUAL_55 = {
-  version: 49,
+  version: 51,
 
   slotTables: {
     /* slot per livello di classe: array di slot per livello incantesimo 1..9 */
@@ -492,7 +492,7 @@ window.MANUAL_55 = {
             ],
             5: [
               { id: 'parola-curativa-di-massa', name: 'Parola Curativa di Massa' },
-              { id: 'rivivificare', name: 'Rivivificare' }
+              { id: 'rianimare', name: 'Rianimare' }
             ],
             7: [
               { id: 'aura-vita', name: 'Aura di Vita' },
@@ -2592,7 +2592,7 @@ window.MANUAL_55 = {
             ],
             5: [
               { id: 'luce-diurna', name: 'Luce Diurna' },
-              { id: 'rivivificare', name: 'Rivivificare' }
+              { id: 'rianimare', name: 'Rianimare' }
             ],
             7: [
               { id: 'guardiano-fede', name: 'Guardiano della Fede' },
@@ -2992,7 +2992,7 @@ window.MANUAL_55 = {
       meta: 'Azione · Tocco · Istantaneo · V, S',
       desc: 'Tutte le maledizioni sulla creatura toccata terminano. Su un oggetto maledetto, spezza il vincolo con il proprietario (la maledizione dell\'oggetto resta).' },
     { id: 'rianimare', name: 'Rianimare', level: 3, school: 'Negromanzia',
-      classes: ['paladino', 'chierico', 'druido', 'ranger'],
+      classes: ['paladino', 'chierico', 'druido', 'ranger', 'warlock'],
       meta: 'Azione · Tocco · Istantaneo · V, S, M (diamanti da 300 MO, consumati)',
       desc: 'Una creatura morta da non più di 1 minuto torna in vita con 1 PF. Non funziona su chi è morto di vecchiaia e non rigenera parti del corpo mancanti.' },
 
@@ -3025,10 +3025,6 @@ window.MANUAL_55 = {
       classes: ['paladino', 'bardo', 'chierico', 'druido', 'ranger', 'mago'],
       meta: 'Azione · Sé · 1 ora CONC · V, S',
       desc: 'Percepisci la direzione di una creatura che ti è familiare entro 300 m, anche in movimento. Bloccato dall\'acqua corrente.' },
-    { id: 'interdizione-morte', name: 'Interdizione alla Morte', level: 4, school: 'Abiurazione',
-      classes: ['paladino', 'chierico'],
-      meta: 'Azione · Tocco · 8 ore · V, S',
-      desc: 'La prima volta che il bersaglio scenderebbe a 0 PF, resta invece a 1 PF e l\'incantesimo termina. Annulla anche un effetto che ucciderebbe all\'istante senza infliggere danni.' },
     { id: 'punizione-sbalorditiva', name: 'Punizione Sbalorditiva', level: 4, school: 'Incantamento',
       classes: ['paladino'],
       meta: 'Azione bonus (dopo un colpo in mischia) · Sé · Istantaneo · V',
@@ -3153,10 +3149,6 @@ window.MANUAL_55 = {
       classes: ['druido', 'ranger', 'stregone', 'mago'],
       meta: 'Azione · Tocco · 8 ore · V, S, M (una carota essiccata)',
       desc: 'La creatura volontaria toccata ottiene Scurovisione 45 m per la durata.' },
-    { id: 'potenziare-abilita', name: 'Potenziare Abilità', level: 2, school: 'Trasmutazione',
-      classes: ['bardo', 'chierico', 'druido', 'ranger', 'stregone', 'mago'],
-      meta: 'Azione · Tocco · 1 ora CONC · V, S, M (pelo o una piuma)',
-      desc: 'La creatura toccata ha vantaggio alle prove con una caratteristica a scelta finché dura. +1 bersaglio (con caratteristica scelta a parte) per ogni slot oltre il 2°.' },
     { id: 'individuare-trappole', name: 'Individuare Trappole', level: 2, school: 'Divinazione',
       classes: ['chierico', 'druido', 'ranger'],
       meta: 'Azione · 36 m · Istantaneo · V, S',
@@ -3279,10 +3271,6 @@ window.MANUAL_55 = {
       classes: ['ranger'],
       meta: 'Azione bonus · Sé · 1 min CONC · V, S, M (una faretra, valore 1+ MO)',
       desc: 'Finché dura, ogni azione bonus ti permette due attacchi extra con un\'arma che scaglia frecce o quadrelli: l\'incantesimo crea la munizione necessaria, che si disintegra subito dopo colpire o mancare.' },
-    { id: 'passo-arboreo', name: 'Passo Arboreo', level: 5, school: 'Convocazione',
-      classes: ['druido', 'ranger'],
-      meta: 'Azione · Sé · 1 min CONC · V, S',
-      desc: 'Puoi entrare in un albero e spostarti dentro un altro albero della stessa specie entro 150 m, spendendo 1,5 m di movimento per ciascun passaggio. Puoi farlo una sola volta per turno e devi terminare ogni turno fuori da un albero.' },
 
     /* ===== Warlock — trucchetti e 1°-2° livello (blocco 1) ===== */
     { id: 'guardia-della-lama', name: 'Guardia della Lama', level: 0, school: 'Abiurazione',
@@ -3399,10 +3387,6 @@ window.MANUAL_55 = {
       classes: ['bardo', 'warlock'],
       meta: 'Azione · 18 m · 1 min CONC · V, S',
       desc: 'Le creature scelte entro gittata fanno TS Saggezza (successo automatico se ti stanno già combattendo) o subiscono −10 alle prove di Percezione e alla Percezione passiva finché dura.' },
-    { id: 'paralizzare-umanoide', name: 'Paralizzare Umanoide', level: 2, school: 'Incantamento',
-      classes: ['bardo', 'chierico', 'druido', 'stregone', 'warlock', 'mago'],
-      meta: 'Azione · 18 m · 1 min CONC · V, S, M (un pezzo di ferro dritto)',
-      desc: 'Un Umanoide fa TS Saggezza o è Paralizzato finché dura, ripetendo il TS a fine di ogni suo turno. +1 bersaglio per ogni slot oltre il 2°.' },
     { id: 'invisibilita', name: 'Invisibilità', level: 2, school: 'Illusione',
       classes: ['bardo', 'stregone', 'warlock', 'mago', 'chierico'],
       meta: 'Azione · Tocco · 1 ora CONC · V, S, M (un ciglio in gomma arabica)',
@@ -3503,10 +3487,6 @@ window.MANUAL_55 = {
       classes: ['bardo', 'warlock', 'mago'],
       meta: '1 minuto · Speciale · 8 ore · V, S, M (una manciata di sabbia)',
       desc: 'Tu o un messaggero volontario toccato entrate in trance (Incapace di Agire, velocità 0) per contattare in sogno un bersaglio conosciuto sullo stesso piano, potendo conversare e plasmare l\'ambiente onirico finché dorme. Puoi rendere il messaggero terrificante: consegna un messaggio di massimo 10 parole, poi il bersaglio fa TS Saggezza o non trae beneficio dal riposo e subisce 3d6 psichici al risveglio.' },
-    { id: 'paralizzare-mostro', name: 'Paralizzare Mostro', level: 5, school: 'Incantamento',
-      classes: ['bardo', 'stregone', 'warlock', 'mago'],
-      meta: 'Azione · 27 m · 1 min CONC · V, S, M (un pezzo di ferro dritto)',
-      desc: 'Una creatura fa TS Saggezza o è Paralizzata finché dura, ripetendo il TS a fine di ogni suo turno. +1 bersaglio per ogni slot oltre il 5°.' },
     { id: 'tempesta-di-radiosita-di-jallarzi', name: 'Tempesta di Radiosità di Jallarzi', level: 5, school: 'Evocazione',
       classes: ['warlock', 'mago'],
       meta: 'Azione · 36 m · 1 min CONC · V, S, M (un pizzico di fosforo)',
@@ -3756,10 +3736,6 @@ window.MANUAL_55 = {
       classes: ['bardo', 'chierico'],
       meta: 'Azione bonus · 18 m · Istantaneo · V',
       desc: 'Fino a sei creature scelte entro gittata recuperano 2d4 + il tuo modificatore da incantatore PF. +1d4 per ogni slot oltre il 3°.' },
-    { id: 'rivivificare', name: 'Rivivificare', level: 3, school: 'Necromanzia',
-      classes: ['chierico', 'druido', 'paladino', 'ranger', 'warlock'],
-      meta: 'Azione · Tocco · Istantaneo · V, S, M (un diamante da 300+ MO, consumato)',
-      desc: 'Tocchi una creatura morta da non più di 1 minuto: torna in vita con 1 PF. Non funziona su chi è morto di vecchiaia né ripristina parti del corpo mancanti.' },
     { id: 'inviare', name: 'Inviare', level: 3, school: 'Divinazione',
       classes: ['bardo', 'chierico', 'mago'],
       meta: 'Azione · Illimitata · Istantaneo · V, S, M (un filo di rame)',
@@ -4000,10 +3976,6 @@ window.MANUAL_55 = {
       classes: ['chierico', 'druido', 'mago'],
       meta: 'Azione · 90 m · 10 min CONC · V, S, M (un misto di acqua e polvere)',
       desc: 'Controlli l\'acqua in un cubo fino a 30 m di lato entro gittata, scegliendo un effetto (azione magica per ripeterlo o cambiarlo nei turni successivi): Alluvione (il livello sale fino a 6 m, o crea un\'onda che travolge veicoli), Dividere le Acque (apri una trincea larga con pareti d\'acqua ai lati), o Reindirizzare (fai scorrere l\'acqua nella direzione che scegli, anche controcorrente).' },
-    { id: 'protezione-dalla-morte', name: 'Protezione dalla Morte', level: 4, school: 'Abiurazione',
-      classes: ['chierico', 'paladino'],
-      meta: 'Azione · Tocco · 8 ore · V, S',
-      desc: 'La prima volta che la creatura toccata scenderebbe a 0 PF prima della fine dell\'incantesimo, resta invece a 1 PF e l\'incantesimo termina; nega anche un effetto che la ucciderebbe all\'istante senza infliggere danno.' },
     { id: 'divinazione', name: 'Divinazione', level: 4, school: 'Divinazione',
       classes: ['chierico', 'druido', 'mago'],
       meta: 'Azione o Rituale · Sé · Istantaneo · V, S, M (incenso da 25+ MO, consumato)',
