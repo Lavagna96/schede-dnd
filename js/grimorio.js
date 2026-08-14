@@ -730,6 +730,16 @@
     init: init,
     render: render,
     renderSlots: renderSlots,
-    openManual: openManual
+    openManual: openManual,
+    // Esposte per lo step facoltativo "Aggiorna incantesimi" del wizard
+    // Sali di Livello (js/levelup.js): stesso identico dato/stato/toggle
+    // del Glossario qui sopra, niente duplicazione.
+    getClassSpells: getClassSpells,
+    getPreparedIds: getPreparedIds,
+    getMaxPrepared: getMaxPrepared,
+    getMaxSlotLevel: getMaxSlotLevel,
+    getFixedIds: getFixedIds,
+    togglePrepared: togglePrepared,
+    spellRow: spellRow
   };
 })();

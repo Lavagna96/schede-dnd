@@ -24,6 +24,12 @@
   ];
 
   var overlay, titleEl, bodyEl;
+  // Quando il passo 2 facoltativo (aggiorna incantesimi) è in mostra, il
+  // livello è già stato salvato: chiudere con ✕/tap-fuori a quel punto deve
+  // comunque rinfrescare la scheda come i bottoni "Salta"/"Aggiorna ora",
+  // non limitarsi allo scarto silenzioso previsto per il passo 1 (bozza non
+  // ancora confermata). null = nulla da rifinire, chiusura normale.
+  var pendingFinish = null;
 
   /* ---------- helper generici (stessi di js/edit-sheet.js/js/items.js) ---------- */
 
@@ -58,6 +64,20 @@
   function closeSheet() {
     overlay.classList.add('hidden');
     bodyEl.innerHTML = ''; // scarta qualunque bozza non salvata
+    pendingFinish = null;
+  }
+
+  // Bersaglio di ✕/tap-fuori: se c'è una rifinitura in sospeso (passo 2 già
+  // salvato) la esegue invece dello scarto silenzioso, altrimenti chiude e
+  // basta (bozza del passo 1 mai confermata).
+  function requestClose() {
+    if (pendingFinish) {
+      var fn = pendingFinish;
+      pendingFinish = null;
+      fn();
+    } else {
+      closeSheet();
+    }
   }
 
   /* ---------- visibilità del bottone in header ---------- */
@@ -74,6 +94,7 @@
   /* ---------- wizard ---------- */
 
   function openWizard() {
+    pendingFinish = null; // niente rifiniture in sospeso da un'apertura precedente
     var character = window.AppStorage.getState().character;
     var level = character.level;
     if (level >= 20) {
@@ -190,28 +211,46 @@
     }
 
     function collectNewPrivileges() {
-      var names = [];
+      var items = [];
       ((klass.levelFeatures && klass.levelFeatures[nextLevel]) || []).forEach(function (f) {
         if (f.trait !== false) {
-          names.push(f.name);
+          items.push({ name: f.name, desc: f.desc });
         }
       });
       if (character.subclassId && klass.subclasses && klass.subclasses[character.subclassId]) {
         var sub = klass.subclasses[character.subclassId];
         ((sub.features && sub.features[nextLevel]) || []).forEach(function (f) {
-          names.push(f.name);
+          items.push({ name: f.name, desc: f.desc });
         });
       }
       var species = manual.species[character.speciesId];
       if (species && species.traits) {
         species.traits.forEach(function (t) {
           if (t.minLevel === nextLevel) {
-            names.push(t.name);
+            items.push({ name: t.name, desc: t.desc });
           }
         });
       }
 
-      return names;
+      return items;
+    }
+
+    /* Riga cliccabile di un nuovo privilegio: stesso markup/classi delle card
+       "Tratti" (js/traits.js buildFeatEl — .feat.pressable + data-detail-*),
+       così il listener globale già in js/bottom-sheet.js apre il dettaglio
+       senza bisogno di codice nuovo per l'interazione. */
+    function buildPrivilegeEl(item) {
+      var div = el('div', 'feat pressable');
+      div.setAttribute('data-detail-title', item.name);
+      div.setAttribute('data-detail-body', item.desc || '');
+
+      var head = el('div', 'feat-head');
+      head.appendChild(el('span', 'ft', item.name));
+      head.appendChild(el('span', 'feat-chevron', '›'));
+      div.appendChild(head);
+      div.appendChild(el('div', 'fd', truncate(item.desc, 58)));
+
+      return div;
     }
 
     function buildGainRow(label, before, after) {
@@ -301,7 +340,10 @@
 
       var newPrivileges = collectNewPrivileges();
       if (newPrivileges.length) {
-        gainsContainer.appendChild(el('p', 'levelup-new-feats', 'Nuovi privilegi: ' + newPrivileges.join(', ')));
+        gainsContainer.appendChild(el('div', 'edit-section-label', 'Nuovi privilegi'));
+        newPrivileges.forEach(function (item) {
+          gainsContainer.appendChild(buildPrivilegeEl(item));
+        });
       }
     }
 
@@ -863,13 +905,32 @@
 
       window.AppStorage.saveState(state, true);
 
-      // Il salvataggio è già avvenuto: chiudere il pannello e nascondere il
-      // bottone (se il livello è ora 20) non deve dipendere dal refresh
-      // visivo dei moduli qui sotto. Prima si chiude, poi si aggiorna la
-      // scheda — un modulo che va in errore non lascia più il popup aperto
-      // con il livello già cambiato sotto (bug segnalato: "il livello cambia
-      // ma il popup rimane aperto", causa un'eccezione in uno dei render
-      // successivi che interrompeva l'esecuzione prima di closeSheet()).
+      // Il livello è già salvato da qui in poi: se sono cambiati slot
+      // incantesimo o massimo preparati, offre il passo 2 facoltativo prima
+      // di chiudere; altrimenti chiude subito come sempre.
+      var slotsBefore = (viewBefore.slots || []).join('/');
+      var slotsAfter = (viewAfter.slots || []).join('/');
+      var prepBefore = (klass.preparedByLevel || [])[level];
+      var prepAfter = (klass.preparedByLevel || [])[nextLevel];
+
+      if (slotsBefore !== slotsAfter || prepBefore !== prepAfter) {
+        pendingFinish = finishWizard;
+        showSpellUpdateStep(slotsBefore, slotsAfter, prepBefore, prepAfter);
+      } else {
+        finishWizard();
+      }
+    }
+
+    // Chiusura effettiva (dopo Conferma, con o senza il passo 2): chiude il
+    // pannello e rinfresca la scheda. Il salvataggio è già avvenuto prima di
+    // arrivare qui, quindi chiudere e nascondere il bottone (se il livello è
+    // ora 20) non deve dipendere dal refresh visivo dei moduli qui sotto.
+    // Prima si chiude, poi si aggiorna la scheda — un modulo che va in
+    // errore non lascia più il popup aperto con il livello già cambiato
+    // sotto (bug segnalato: "il livello cambia ma il popup rimane aperto",
+    // causa un'eccezione in uno dei render successivi che interrompeva
+    // l'esecuzione prima di closeSheet()).
+    function finishWizard() {
       closeSheet();
       render();
 
@@ -882,6 +943,84 @@
           }
         }
       });
+    }
+
+    /* ---------- passo 2 facoltativo: aggiorna incantesimi ---------- */
+
+    // Costruisce la lista di incantesimi con checkbox riusando ESATTAMENTE
+    // dati/stato/toggle del Glossario (js/grimorio.js, esposti su
+    // window.AppGrimorio): niente logica di preparazione duplicata qui.
+    // A questo punto ch.level è già nextLevel (saveState già avvenuto),
+    // quindi le funzioni del grimorio — che leggono lo stato reale — vedono
+    // già i nuovi slot/massimo preparati.
+    function buildSpellUpdateStep(slotsBefore, slotsAfter, prepBefore, prepAfter) {
+      var grim = window.AppGrimorio;
+      var wrap = el('div');
+
+      wrap.appendChild(el('div', 'levelup-badge', 'Livello ' + level + ' → ' + nextLevel));
+      wrap.appendChild(el('div', 'levelup-step-label', 'Passo 2 di 2 · facoltativo'));
+
+      var changes = [];
+      if (slotsBefore !== slotsAfter) {
+        changes.push('nuovi slot incantesimo (' + (slotsBefore || '—') + ' → ' + (slotsAfter || '—') + ')');
+      }
+      if (prepBefore !== prepAfter) {
+        changes.push('incantesimi preparabili da ' + prepBefore + ' a ' + prepAfter);
+      }
+      var intro = 'Hai ' + changes.join(' e ') + '. Aggiorna ora la lista preparati o salta e fallo dopo dal Grimorio.';
+      wrap.appendChild(el('p', 'levelup-step2-intro', intro));
+
+      var countRow = el('div', 'levelup-gain-row');
+      countRow.appendChild(el('span', 'levelup-gain-label', 'Incantesimi preparati'));
+      var countEl = el('span', 'gloss-count');
+      countRow.appendChild(countEl);
+      wrap.appendChild(countRow);
+
+      var listWrap = el('div', 'levelup-spell-list');
+      wrap.appendChild(listWrap);
+
+      function refreshList() {
+        listWrap.innerHTML = '';
+        var maxLvl = grim.getMaxSlotLevel();
+        var fixedIds = grim.getFixedIds();
+        var preparedIds = grim.getPreparedIds();
+        var classSpells = grim.getClassSpells(character.classId);
+        for (var lvl = 1; lvl <= maxLvl; lvl++) {
+          var spells = classSpells.filter(function (s) { return s.level === lvl; });
+          if (!spells.length) {
+            continue;
+          }
+          listWrap.appendChild(el('div', 'gloss-sec', lvl + '° livello'));
+          spells.forEach(function (spell) {
+            listWrap.appendChild(grim.spellRow(spell, {
+              mode: 'pick',
+              fixed: fixedIds.indexOf(spell.id) >= 0,
+              prepared: preparedIds.indexOf(spell.id) >= 0,
+              onAfterToggle: refreshList
+            }));
+          });
+        }
+        countEl.textContent = grim.getPreparedIds().length + '/' + grim.getMaxPrepared();
+      }
+      refreshList();
+
+      var actions = el('div', 'levelup-step2-actions');
+      var skipBtn = el('button', 'levelup-btn-outline', 'Salta');
+      skipBtn.type = 'button';
+      skipBtn.addEventListener('click', finishWizard);
+      var updateBtn = el('button', 'save-btn', 'Aggiorna ora');
+      updateBtn.type = 'button';
+      updateBtn.addEventListener('click', finishWizard);
+      actions.appendChild(skipBtn);
+      actions.appendChild(updateBtn);
+      wrap.appendChild(actions);
+
+      return wrap;
+    }
+
+    function showSpellUpdateStep(slotsBefore, slotsAfter, prepBefore, prepAfter) {
+      bodyEl.innerHTML = '';
+      bodyEl.appendChild(buildSpellUpdateStep(slotsBefore, slotsAfter, prepBefore, prepAfter));
     }
 
     /* ---------- costruzione del foglio ---------- */
@@ -961,11 +1100,11 @@
     }
     var closeBtn = document.getElementById('levelup-sheet-close');
     if (closeBtn) {
-      closeBtn.addEventListener('click', closeSheet);
+      closeBtn.addEventListener('click', requestClose);
     }
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) {
-        closeSheet();
+        requestClose();
       }
     });
     var btn = document.getElementById('levelup-btn');

@@ -32,6 +32,16 @@
   z-index: 270;
 }
 
+/* #bottom-sheet-overlay è il pannello di sola lettura generico (tratti,
+   privilegi, incantesimi…): deve poter stare SOPRA qualunque altro overlay
+   di modifica quando viene aperto dall'interno di uno di essi (es. il tap
+   su un privilegio o un incantesimo nel wizard Sali di Livello), non solo
+   sopra la scheda. Stesso principio già valido per #gloss-modal (z-index
+   70, css/components/grimoire.css), qui esteso agli overlay a z-index 80. */
+#bottom-sheet-overlay {
+  z-index: 90;
+}
+
 .bottom-sheet {
   width: calc(100% - var(--space-6));
   max-width: 720px;
