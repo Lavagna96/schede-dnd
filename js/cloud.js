@@ -261,6 +261,16 @@ import {
       return;
     }
     unsubscribeDoc = onSnapshot(charRef(), function (snap) {
+      // Guardia anti-race: se nel frattempo si è passati a un altro
+      // personaggio dalla dashboard (selectCharacter cambia l'id attivo e
+      // poi riaggancia questo listener, ma un evento di questo vecchio
+      // documento può restare in coda), un evento tardivo non deve scrivere
+      // sotto la chiave del personaggio ora attivo — bug segnalato: un
+      // personaggio nuovo che si ritrova i dati del grimorio di un altro,
+      // perché applyRemote scrive sempre sotto activeCharId() corrente.
+      if (charId() !== id) {
+        return;
+      }
       if (snap.metadata.hasPendingWrites) {
         return; // eco delle nostre stesse scritture
       }
