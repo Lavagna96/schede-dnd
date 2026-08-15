@@ -754,7 +754,14 @@
     function buildSubclassSection() {
       var wrap = el('div');
       wrap.appendChild(el('div', 'edit-section-label', 'Sottoclasse'));
-      var ids = Object.keys(klass.subclasses || {});
+      // Sottoclassi da fonti opzionali (es. Giuramento dei Genii Nobili,
+      // `source: 'heroes-faerun'`) compaiono solo se quella fonte è attiva
+      // — stessa regola degli incantesimi opzionali in js/grimorio.js.
+      var ids = Object.keys(klass.subclasses || {}).filter(function (id) {
+        var s = klass.subclasses[id];
+
+        return !s.source || (window.AppSources && window.AppSources.isEnabled(s.source));
+      });
 
       if (ids.length <= 1) {
         autoSubclassId = ids[0] || null;
@@ -773,7 +780,11 @@
       ids.forEach(function (id) {
         var s = klass.subclasses[id];
         var row = el('div', 'levelup-feat-row');
-        row.appendChild(el('div', 'levelup-feat-name', s.name));
+        var nameEl = el('div', 'levelup-feat-name', s.name);
+        if (s.source) {
+          nameEl.appendChild(el('span', 'gloss-tag gloss-tag-source', 'FR'));
+        }
+        row.appendChild(nameEl);
         if (s.tenets) {
           row.appendChild(el('div', 'levelup-feat-desc', s.tenets));
         }

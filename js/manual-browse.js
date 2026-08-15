@@ -160,7 +160,10 @@
           body += '<p class="sheet-desc"><b>' + f.name + '.</b> ' + f.desc + '</p>';
         });
       });
-      var subNames = Object.keys(k.subclasses || {}).map(function (s) { return k.subclasses[s].name; });
+      var subNames = Object.keys(k.subclasses || {}).filter(function (s) {
+        var sc = k.subclasses[s];
+        return !sc.source || (window.AppSources && window.AppSources.isEnabled(sc.source));
+      }).map(function (s) { return k.subclasses[s].name; });
       if (subNames.length) {
         body += '<p class="sc-meta">Sottoclassi: ' + subNames.join(', ') + '</p>';
       }

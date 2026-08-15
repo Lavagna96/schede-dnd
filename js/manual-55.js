@@ -13,7 +13,7 @@
  * quando `version` locale è più nuova di quella remota.
  */
 window.MANUAL_55 = {
-  version: 51,
+  version: 52,
 
   slotTables: {
     /* slot per livello di classe: array di slot per livello incantesimo 1..9 */
@@ -1922,6 +1922,49 @@ window.MANUAL_55 = {
               { name: 'Angelo Vendicatore', desc: 'Azione bonus: per 10 minuti (o finché non termini l\'effetto), ottieni Volo (velocità di volo 18 m, puoi librarti) e Aura Terrificante (un nemico che inizia il turno nella tua Aura di Protezione fa un TS Saggezza o è Spaventato per 1 minuto o finché non subisce danni; gli attacchi contro chi è Spaventato così hanno vantaggio). Una volta usato, serve un riposo lungo per riusarlo, oppure uno slot di 5° livello per ripristinarlo.' }
             ]
           }
+        },
+        'genii-nobili': {
+          name: 'Giuramento dei Genii Nobili',
+          source: 'heroes-faerun',
+          tenets: 'Semina il seme della creazione tra le ceneri della distruzione. · Guida con splendore e grazia. · Rispetta gli elementi, e temine l\'ira.',
+          spellsByLevel: {
+            3: [
+              { id: 'sfera-cromatica', name: 'Sfera Cromatica' },
+              { id: 'elementalismo', name: 'Elementalismo' },
+              { id: 'punizione-tonante', name: 'Punizione Tonante' }
+            ],
+            5: [
+              { id: 'immagine-speculare', name: 'Immagine Speculare' },
+              { id: 'forza-fantasmatica', name: 'Forza Fantasmatica' }
+            ],
+            9: [
+              { id: 'volare', name: 'Volare' },
+              { id: 'forma-gassosa', name: 'Forma Gassosa' }
+            ],
+            13: [
+              { id: 'convocare-elementali-minori', name: 'Convocare Elementali Minori' },
+              { id: 'evocare-elementale', name: 'Evocare Elementale' }
+            ],
+            17: [
+              { id: 'punizione-bandente', name: 'Punizione Bandente' },
+              { id: 'contattare-altro-piano', name: 'Contattare Altro Piano' }
+            ]
+          },
+          features: {
+            3: [
+              { name: 'Fendente Elementale', desc: 'Subito dopo aver lanciato Punizione Divina, puoi spendere un uso di Incanalare Divinità per scegliere uno di questi effetti sul bersaglio del fendente: Schiacciata del Dao (diventa Afferrato, CD di fuga pari alla tua CD incantesimi, e finché è Afferrato è anche Trattenuto); Fuga del Djinn (tu ti teletrasporti in uno spazio libero che vedi entro 9 m e diventi semi-incorporeo fino alla fine del tuo turno successivo: resistenza a danni contundenti, perforanti e taglienti, immunità ad Afferrato, Prono e Trattenuto); Furia dell\'Efreet (+2d4 danni di fuoco al fendente; il fuoco si propaga a un\'altra creatura a vista entro 9 m, infliggendole altri 2d4 fuoco); Ondata del Marid (il bersaglio e le creature a tua scelta in un\'emanazione di 3 m da te fanno un TS Forza contro la tua CD incantesimi: chi fallisce è spinto di 4,5 m in linea retta lontano da te e cade Prono).' },
+              { name: 'Splendore del Genio', desc: 'Quando non indossi armatura, la tua CA base è 10 + modificatore di Destrezza + modificatore di Carisma (puoi comunque usare uno scudo). Ottieni anche competenza in un\'abilità a scelta tra Acrobazia, Intimidire, Intrattenere o Persuasione.' }
+            ],
+            7: [
+              { name: 'Aura di Splendore Elementale', desc: 'Scegli un tipo di danno tra acido, freddo, fuoco, fulmine o tuono: tu e i tuoi alleati avete resistenza a quel tipo di danno mentre siete nella tua Aura di Protezione. A inizio di ogni tuo turno puoi cambiare il tipo scelto (nessuna azione).' }
+            ],
+            15: [
+              { name: 'Ritorsione Elementale', desc: 'Quando subisci un attacco andato a segno, puoi usare una reazione per dimezzare quei danni (arrotondando per difetto) e costringere l\'attaccante a un TS Destrezza contro la tua CD incantesimi: se fallisce subisce 2d10 + il tuo modificatore di Carisma di un tipo di danno a scelta tra acido, freddo, fuoco, fulmine o tuono (metà se il TS riesce). Puoi usarlo un numero di volte pari al tuo modificatore di Carisma (minimo 1), tutte recuperate al riposo lungo.' }
+            ],
+            20: [
+              { name: 'Splendore Nobile', desc: 'Azione bonus: per 10 minuti (o finché non termini l\'effetto, nessuna azione), ottieni Volo (velocità di volo 18 m, puoi librarti) e Desiderio Minore (con una reazione, quando tu o un alleato nella tua Aura di Protezione fallite una prova con d20, potete avere successo invece). Una volta usato, serve un riposo lungo per riusarlo, oppure puoi ripristinarne l\'uso spendendo uno slot di 5° livello (nessuna azione).' }
+            ]
+          }
         }
       }
     },
@@ -2888,6 +2931,14 @@ window.MANUAL_55 = {
       classes: ['paladino', 'chierico'],
       meta: 'Azione bonus · 18 m · 10 min CONC · V, S, M',
       desc: 'Una creatura a scelta entro gittata ottiene +2 alla CA per tutta la durata.' },
+    { id: 'vampata-fuoco-arcano', name: 'Vampata di Fuoco Arcano', level: 1, school: 'Evocazione', source: 'heroes-faerun',
+      classes: ['stregone', 'mago'],
+      meta: 'Azione · 18 m · Istantaneo · V, S',
+      desc: 'Scagli un getto di fuoco splendente: attacco con incantesimo a distanza contro un bersaglio a portata, che non trae beneficio da Copertura Parziale o a Tre Quarti contro questo attacco. Se colpisci, 2d10 danni radiosi. +1 getto (con tiro per colpire separato, sullo stesso bersaglio o su bersagli diversi) per ogni slot oltre il 1°.' },
+    { id: 'colpo-allontanamento', name: 'Colpo d\'Allontanamento', level: 1, school: 'Abiurazione', source: 'heroes-faerun',
+      classes: ['bardo', 'chierico', 'paladino', 'mago'],
+      meta: 'Azione · 18 m · Istantaneo · V, S, M (una manina d\'argilla)',
+      desc: 'Scagli una forza magica disorientante contro una creatura a portata: TS Costituzione (Costrutti e Non Morti hanno automaticamente successo). Se fallisce, il bersaglio subisce 2d4 danni di Forza, la sua velocità è dimezzata fino all\'inizio del tuo turno successivo e nel suo prossimo turno può compiere solo un\'azione o un\'azione bonus (non entrambe); se riesce subisce solo metà danno. +2d4 danni per ogni slot oltre il 1°.' },
 
     /* ===== 2° livello ===== */
     { id: 'potenziare-capacita', name: 'Potenziare Capacità', level: 2, school: 'Trasmutazione',
@@ -2950,6 +3001,18 @@ window.MANUAL_55 = {
       classes: ['paladino', 'bardo', 'chierico'],
       meta: 'Azione · 18 m · 10 min · V, S',
       desc: 'Sfera di raggio 4,5 m. Chi entra o inizia il turno nell\'area fa TS Carisma: se fallisce non può mentire deliberatamente. Sai chi supera o fallisce il tiro.' },
+    { id: 'armatura-di-morte', name: 'Armatura di Morte', level: 2, school: 'Negromanzia', source: 'heroes-faerun',
+      classes: ['stregone', 'mago'],
+      meta: 'Azione · Tocco · 1 ora · V, S, M (un onice da 50+ MO, consumato)',
+      desc: 'Un\'aura cupa avvolge la creatura toccata finché dura: ha vantaggio ai tiri salvezza contro la morte, e una volta a turno, quando una creatura entro 1,5 m la colpisce con un attacco in mischia, l\'attaccante subisce 2d4 danni necrotici.' },
+    { id: 'homunculi-servizievoli-deryan', name: 'Homunculi Servizievoli di Deryan', level: 2, school: 'Convocazione', source: 'heroes-faerun',
+      classes: ['chierico', 'mago'],
+      meta: 'Azione o Rituale · Sé · 8 ore · V, S, M (gemme in polvere da 100+ MO, consumate, e uno strumento da artigiano in cui sei competente)',
+      desc: 'Evochi un gruppo di spiriti servizievoli, intangibili e invulnerabili, con l\'aspetto di homunculi o di un altro costrutto a scelta: hanno competenza in Arcano e nello strumento da artigiano usato per lanciare l\'incantesimo. Se li usi per costruire un oggetto, fungono da singolo assistente, dimezzando il tempo di lavorazione.' },
+    { id: 'elusione-elminster', name: 'Elusione di Elminster', level: 2, school: 'Abiurazione', source: 'heroes-faerun',
+      classes: ['mago'],
+      meta: 'Azione bonus · Sé · 10 min CONC · V, S',
+      desc: 'Wardi arcani ti proteggono dalla magia finché dura: hai vantaggio ai TS contro incantesimi ed effetti magici. Inoltre, se superi un TS contro un incantesimo o effetto magico che normalmente ti farebbe subire metà danno, non subisci invece alcun danno.' },
 
     /* ===== 3° livello ===== */
     { id: 'arma-elementale', name: 'Arma Elementale', level: 3, school: 'Trasmutazione',
@@ -2995,6 +3058,22 @@ window.MANUAL_55 = {
       classes: ['paladino', 'chierico', 'druido', 'ranger', 'warlock'],
       meta: 'Azione · Tocco · Istantaneo · V, S, M (diamanti da 300 MO, consumati)',
       desc: 'Una creatura morta da non più di 1 minuto torna in vita con 1 PF. Non funziona su chi è morto di vecchiaia e non rigenera parti del corpo mancanti.' },
+    { id: 'scudo-cacofonico', name: 'Scudo Cacofonico', level: 3, school: 'Evocazione', source: 'heroes-faerun',
+      classes: ['bardo', 'stregone', 'mago'],
+      meta: 'Azione · Sé · 10 min CONC · V, S',
+      desc: 'Riempi un\'emanazione di 3 m da te di riverberi assordanti finché dura. Chi entra nell\'area o inizia lì il turno fa un TS Costituzione (una volta a turno; puoi escludere creature a scelta): se fallisce subisce 3d6 danni di tuono ed è Assordato fino all\'inizio del tuo turno successivo, se riesce subisce solo metà danno. Inoltre hai resistenza ai danni di tuono e gli attacchi a distanza contro di te hanno svantaggio. +1d6 danni per ogni slot oltre il 3°.' },
+    { id: 'convocare-costrutti', name: 'Convocare Costrutti', level: 3, school: 'Convocazione', source: 'heroes-faerun',
+      classes: ['mago'],
+      meta: 'Azione · 18 m · 10 min CONC · V, S, M (un ingranaggio di ottone)',
+      desc: 'Convochi un gruppo Medio di spiriti ordinati con aspetto di modroni o altri costrutti, in uno spazio libero a portata. Quando li evochi e come azione magica nei turni successivi, comandi loro di colpire una creatura o un oggetto entro 1,5 m con uno di questi effetti: Forza Meccanica (TS Destrezza o 3d6 danni di Forza, metà se riesce) o Guardia Ordinata (il bersaglio ottiene 1d6 + il tuo modificatore da incantatore PF temporanei). Muovendoti nel turno puoi spostare gli spiriti fino a 9 m. +1d6 a entrambi gli effetti per ogni slot oltre il 3°.' },
+    { id: 'lancia-argento-laerel', name: 'Lancia d\'Argento di Laerel', level: 3, school: 'Evocazione', source: 'heroes-faerun',
+      classes: ['chierico', 'stregone', 'mago'],
+      meta: 'Azione · Sé · Istantaneo · V, S, M (uno spillo d\'argento da 250+ MO)',
+      desc: 'Un fascio di energia argentea sgorga da te in una linea lunga 36 m e larga 1,5 m. Le creature a tua scelta nella linea fanno un TS Forza: se falliscono subiscono 3d10 danni di Forza e cadono Prone, se riescono subiscono solo metà danno. +1d10 per ogni slot oltre il 3°.' },
+    { id: 'vipera-di-sylune', name: 'Vipera di Syluné', level: 3, school: 'Convocazione', source: 'heroes-faerun',
+      classes: ['druido', 'mago'],
+      meta: 'Azione bonus · Sé · 1 ora · V, S, M (una zanna di serpente)',
+      desc: 'Un serpente spettrale ti avvolge il corpo finché dura: ottieni 15 PF temporanei (l\'incantesimo termina in anticipo se li esaurisci). Finché è attivo: Arrampicarsi (velocità di arrampicarsi pari alla tua velocità); Morso Velenoso (azione magica: attacco con incantesimo a distanza contro una creatura entro 15 m; se colpisci, 1d6 danni di Forza e condizione Avvelenato fino all\'inizio del tuo turno successivo, e mentre è Avvelenato è anche Incapacitato). +5 PF temporanei e +1d6 al morso per ogni slot oltre il 3°.' },
 
     /* ===== 4° livello ===== */
     { id: 'bandire', name: 'Bandire', level: 4, school: 'Abiurazione',
@@ -3029,6 +3108,18 @@ window.MANUAL_55 = {
       classes: ['paladino'],
       meta: 'Azione bonus (dopo un colpo in mischia) · Sé · Istantaneo · V',
       desc: '+4d6 psichici al colpo. Il bersaglio fa TS Saggezza: se fallisce è Stordito fino alla fine del tuo prossimo turno. +1d6 per ogni slot oltre il 4°.' },
+    { id: 'contraccolpo', name: 'Contraccolpo', level: 4, school: 'Abiurazione', source: 'heroes-faerun',
+      classes: ['bardo', 'stregone', 'warlock', 'mago'],
+      meta: 'Reazione (quando subisci danni) · 18 m · Istantaneo · V',
+      desc: 'Riduci i danni che stai subendo di 4d6 + il modificatore da incantatore. Se i danni scatenanti venivano da una creatura a portata, questa fa un TS Costituzione: se fallisce subisce 4d6 danni di Forza, dimezzati se riesce. +1d6 a entrambi i valori per ogni slot oltre il 4°.' },
+    { id: 'marea-funesta', name: 'Marea Funesta', level: 4, school: 'Convocazione', source: 'heroes-faerun',
+      classes: ['bardo', 'chierico', 'warlock'],
+      meta: 'Azione · 36 m · 1 min CONC · V, S, M (fuliggine e un\'anguilla essiccata)',
+      desc: 'Crei una sfera di oscurità magica di 6 m di raggio (dissolta da un forte vento, come quello di Raffica di Vento), che finché dura si sposta di 3 m da te a inizio di ogni tuo turno. Chi vi appare dentro, vi entra o vi finisce il turno (una volta a turno) fa un TS Saggezza: se fallisce subisce 5d6 danni psichici e sottrae 1d6 ai propri TS fino alla fine del turno successivo, se riesce subisce solo metà danno. Lanciato in Cerchio (almeno 5 lanciatori secondari con slot di 3° livello o superiore, componente speciale di tre perle nere di Pandemonium consumate): il raggio diventa 1,6 km e la durata "finché non dissolto" senza concentrazione; termina prima se un lanciatore coinvolto rilancia Marea Funesta in Cerchio.' },
+    { id: 'tempesta-fuoco-arcano', name: 'Tempesta di Fuoco Arcano', level: 4, school: 'Evocazione', source: 'heroes-faerun',
+      classes: ['stregone', 'mago'],
+      meta: 'Azione · 36 m · 1 min CONC · V, S',
+      desc: 'Evochi un cilindro di 6 m di raggio e 6 m di altezza di Luce Intensa centrato su un punto a portata. Chi vi appare dentro (o vi entra/finisce il turno lì, una volta a turno) fa un TS Costituzione: se fallisce subisce 4d10 danni radiosi, metà se riesce (puoi escludere creature a scelta). Inoltre chi lancia un incantesimo mentre è nel cilindro fa un TS Costituzione o l\'incantesimo si dissolve senza effetto (l\'azione usata è sprecata, ma lo slot eventualmente speso non si consuma). Lanciato in Cerchio (componente speciale uno zaffiro stellato blu da 25.000+ MO consumato, ogni lanciatore secondario spende uno slot di 3° livello o superiore): il raggio diventa 1,6 km, non serve più concentrazione, e area/durata crescono con i lanciatori secondari (1-3 → cilindro 12 m/1 ora; 4-6 → 18 m/8 ore; 7+ → 30 m/24 ore). +1d10 danni per ogni slot oltre il 4° (lancio normale).' },
 
     /* ===== 5° livello ===== */
     { id: 'ricordo-leggendario', name: 'Ricordo Leggendario', level: 5, school: 'Divinazione',
@@ -3080,6 +3171,46 @@ window.MANUAL_55 = {
       classes: ['paladino', 'bardo', 'chierico'],
       meta: '1 ora · Tocco · Istantaneo · V, S, M (diamante da 500 MO, consumato)',
       desc: 'Riporta in vita una creatura morta da non più di 10 giorni con 1 PF. L\'anima deve essere libera e disposta a tornare. Malus −4 a tiri e TS che si riduce a ogni riposo lungo.' },
+    { id: 'permeazione-elementale-songol', name: 'Permeazione Elementale di Songol', level: 5, school: 'Trasmutazione', source: 'heroes-faerun',
+      classes: ['druido', 'stregone', 'mago'],
+      meta: 'Azione · Sé · 1 min CONC · V, S, M (una perla da 100+ MO)',
+      desc: 'Ti infondi del potere elementale dei genî finché dura, ottenendo: Immunità Elementale (scegli un tipo di danno tra acido, freddo, fuoco, fulmine o tuono: hai resistenza a quel tipo); Impulso Elementale (al lancio e a inizio di ogni turno successivo, rilasci un\'esplosione in un\'emanazione di 4,5 m: le creature a tua scelta lì dentro fanno un TS Destrezza o subiscono 2d6 danni del tipo scelto e cadono Prone, metà danno se riescono); Volo (velocità di volo 9 m, puoi librarti). Lanciato in Cerchio (ogni lanciatore secondario spende uno slot di 2° livello o superiore): il tempo di lancio diventa 1 minuto, la durata 10 minuti di concentrazione, e puoi includere una creatura in più per ogni lanciatore secondario (fino a nove).' },
+    { id: 'manto-lunare-alustriel', name: 'Manto Lunare di Alustriel', level: 5, school: 'Abiurazione', source: 'heroes-faerun',
+      classes: ['bardo', 'druido', 'ranger', 'mago'],
+      meta: 'Azione · Sé · 1 min CONC · V, S, M (una pietra di luna da 50+ MO)',
+      desc: 'Riempi un\'emanazione di 6 m da te di luce fioca lunare finché dura: tu e i tuoi alleati nell\'area avete Copertura Parziale e resistenza ai danni da freddo, fulmine e radiosi. Puoi terminare l\'incantesimo in anticipo per usare uno di questi effetti: Liberazione (quando falliresti un TS per evitare o terminare Afferrato, Spaventato o Trattenuto, hai una reazione per riuscire invece); Tregua (azione magica: tu o un alleato nell\'area recuperate 4d10 + il modificatore da incantatore PF).' },
+    { id: 'punizione-bandente', name: 'Punizione Bandente', level: 5, school: 'Convocazione',
+      classes: ['paladino'],
+      meta: 'Azione bonus (dopo un colpo in mischia o senz\'armi) · Sé · 1 min CONC · V',
+      desc: 'Il bersaglio del colpo subisce 5d10 danni di Forza extra. Se questo lo riduce a 50 PF o meno, fa un TS Carisma o viene trasportato per la durata in un demipiano innocuo (Incapacitato lì dentro); quando l\'incantesimo termina riappare nello spazio che ha lasciato, o nel più vicino libero.' },
+
+    /* ===== 6° livello (Heroes of Faerûn) ===== */
+    { id: 'canto-funebre', name: 'Canto Funebre', level: 6, school: 'Incantamento', source: 'heroes-faerun',
+      classes: ['bardo', 'chierico'],
+      meta: 'Azione · Sé · 1 min CONC · V',
+      desc: 'Riempi un\'emanazione di 18 m da te con un potere funesto finché dura: nessuno (tranne chi escludi al lancio) può recuperare PF nell\'area. Chi entra nell\'area o inizia lì il turno fa un TS Costituzione (una volta a turno): se fallisce subisce 3d10 danni necrotici e cade Prono, se riesce subisce metà danno e la sua velocità è dimezzata. Lanciato in Cerchio (almeno 2 lanciatori secondari, ciascuno spende uno slot di 4° livello o superiore): la durata diventa 10 minuti di concentrazione e chi fallisce il TS ottiene anche un livello di Sfinimento (che il riposo lungo non rimuove né ripristina i PF finché dura).' },
+    { id: 'sfere-fulgenti-elminster', name: 'Sfere Fulgenti di Elminster', level: 6, school: 'Evocazione', source: 'heroes-faerun',
+      classes: ['druido', 'stregone', 'mago'],
+      meta: 'Azione · Sé · 1 ora · V, S, M (un opale da 1.000+ MO)',
+      desc: 'Sei orbitato da sei sfere cromatiche finché dura. Puoi spenderle per: Assorbire Energia (reazione quando subisci danni da acido, freddo, fuoco, fulmine o tuono: spendi una sfera e ottieni resistenza a quel danno fino all\'inizio del tuo turno successivo) o Scarica di Energia (azione bonus: lanci una sfera contro un bersaglio entro 36 m con un attacco con incantesimo a distanza; se colpisci, 3d6 danni di acido, freddo, fuoco, fulmine o tuono a scelta; la sfera si consuma comunque). L\'incantesimo termina in anticipo se resti senza sfere. +1 sfera per ogni slot oltre il 6°.' },
+
+    /* ===== 7° livello (Heroes of Faerûn) ===== */
+    { id: 'synostodweomer-simbul', name: 'Synostodweomer di Simbul', level: 7, school: 'Trasmutazione', source: 'heroes-faerun',
+      classes: ['stregone', 'mago'],
+      meta: 'Azione · Tocco · 1 ora · V, S',
+      desc: 'Infondi energia di guarigione magica nella creatura toccata finché dura: ogni volta che lancia un incantesimo con uno slot, può tirare un numero di Dadi Vita non spesi pari al livello dello slot e recuperare PF pari al risultato più il tuo modificatore da incantatore; quei dadi si consumano.' },
+
+    /* ===== 8° livello (Heroes of Faerûn) ===== */
+    { id: 'stella-sacra-di-mystra', name: 'Stella Sacra di Mystra', level: 8, school: 'Evocazione', source: 'heroes-faerun',
+      classes: ['chierico', 'mago'],
+      meta: 'Azione bonus · Sé · 1 min CONC · V, S',
+      desc: 'Una scintilla luminosa aleggia sopra di te finché dura (Luce Intensa entro 1,5 m, Luce Fioca per altri 1,5 m). Quando la evochi e come azione bonus nei turni successivi, puoi scagliare un raggio contro un bersaglio entro 36 m con un attacco con incantesimo a distanza: se colpisci, 4d10 danni di Forza o Radiosi (a scelta) + il tuo modificatore da incantatore. Finché la scintilla è presente hai Copertura Totale a Tre Quarti, e se superi un TS contro un incantesimo di 7° livello o inferiore che ha come unico bersaglio te (senza area d\'effetto), puoi usare una reazione per rifletterlo contro chi l\'ha lanciato, che affronta un TS contro la propria CD.' },
+
+    /* ===== 9° livello (Heroes of Faerûn) ===== */
+    { id: 'lama-del-disastro', name: 'Lama del Disastro', level: 9, school: 'Convocazione', source: 'heroes-faerun',
+      classes: ['stregone', 'warlock', 'mago'],
+      meta: 'Azione bonus · 18 m · 1 min CONC · V, S',
+      desc: 'Crei una lama planare lunga circa 1 m in uno spazio a portata: subito puoi compiere fino a due attacchi con incantesimo in mischia contro una creatura o un oggetto entro 1,5 m dalla lama, 10d6 danni di Forza per colpo (critico con un 18+ sul d20). Nei turni successivi, come azione bonus, puoi spostare la lama di 18 m e ripetere i due attacchi, anche su bersagli diversi. La lama attraversa senza danno le barriere, incluso Muro di Forza.' },
 
     /* ===== Ranger — incantesimi propri (non condivisi col Paladino) ===== */
     /* 1° livello */

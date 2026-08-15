@@ -509,6 +509,13 @@ button.gloss-check::after {
   color: var(--text-secondary);
 }
 
+/* Indicatore di fonte opzionale (es. "FR" = Heroes of Faerûn), solo sulle
+   righe con `spell.source`: mai visibile se la fonte è disattivata, dato
+   che in quel caso la voce non compare proprio nella lista. */
+.gloss-tag-source {
+  color: var(--celest-bright);
+}
+
 .gloss-close {
   flex: none;
 }

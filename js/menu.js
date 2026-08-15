@@ -205,6 +205,40 @@
     });
   }
 
+  /* ---------- fonti opzionali (es. Heroes of Faerûn) ---------- */
+
+  // Un solo bottone per ora (heroes-faerun): il testo cambia fra "Attiva" e
+  // "Disattiva" a seconda dello stato salvato in AppSources (localStorage,
+  // default OFF). Al cambio, riallinea le viste che possono mostrare
+  // incantesimi con `source`: Glossario/Manuale (js/grimorio.js).
+  function updateSourceBtnLabel(id, btn) {
+    if (!btn) {
+      return;
+    }
+    var label = btn.getAttribute('data-source-label') || btn.textContent.replace(/^(Attiva|Disattiva) /, '');
+    btn.setAttribute('data-source-label', label);
+    var enabled = window.AppSources && window.AppSources.isEnabled(id);
+    btn.textContent = (enabled ? 'Disattiva ' : 'Attiva ') + label;
+  }
+
+  function bindSources() {
+    var sourceId = 'heroes-faerun';
+    var btn = document.getElementById('menu-source-' + sourceId);
+    if (!btn || !window.AppSources) {
+      return;
+    }
+    updateSourceBtnLabel(sourceId, btn);
+    btn.addEventListener('click', function () {
+      window.AppSources.setEnabled(sourceId, !window.AppSources.isEnabled(sourceId));
+      updateSourceBtnLabel(sourceId, btn);
+      // Il Grimorio è l'unica vista aperta che può contenere incantesimi
+      // con `source`: la si riallinea subito se è già inizializzata.
+      if (window.AppGrimorio && window.AppGrimorio.render) {
+        window.AppGrimorio.render();
+      }
+    });
+  }
+
   function init() {
     var overlay = document.getElementById('app-menu-overlay');
     if (overlay) {
@@ -217,6 +251,7 @@
     });
     bindSwipeClose();
     bindPanels();
+    bindSources();
   }
 
   window.AppMenu = {

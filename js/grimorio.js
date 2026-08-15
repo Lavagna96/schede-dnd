@@ -24,6 +24,16 @@
     return manual.spells.filter(function (s) { return s.id === id; })[0] || null;
   }
 
+  // Una voce senza `source` (PHB) è sempre inclusa; una voce con `source`
+  // (es. 'heroes-faerun') compare solo se quella fonte opzionale è attiva.
+  // Riguarda SOLO le liste "browsabili" (Glossario/Manuale/picker libero):
+  // getFixedIds()/getLockedIds() non passano da qui apposta, per non far
+  // sparire incantesimi già assegnati se la fonte viene disattivata a metà
+  // partita (vedi commento su spellsFromTable più sotto).
+  function sourceVisible(spell) {
+    return !spell.source || (window.AppSources && window.AppSources.isEnabled(spell.source));
+  }
+
   function getClassSpells(classId) {
     var manual = window.MANUAL_55;
     if (!manual) {
@@ -31,7 +41,7 @@
     }
 
     return manual.spells.filter(function (s) {
-      return s.classes.indexOf(classId) >= 0;
+      return s.classes.indexOf(classId) >= 0 && sourceVisible(s);
     });
   }
 
@@ -379,7 +389,8 @@
         '<span class="gloss-sub">' + spell.school + ' · ' +
           spell.meta.replace(/CONC/g, '<span class="conc">CONC</span>') + '</span>' +
       '</div>' +
-      (opts.fixed ? '<span class="gloss-tag">sempre</span>' : '');
+      (opts.fixed ? '<span class="gloss-tag">sempre</span>' : '') +
+      (spell.source ? '<span class="gloss-tag gloss-tag-source">FR</span>' : '');
 
     /* tocco sulla riga = leggi la descrizione (in ogni modalità) */
     row.addEventListener('click', function () {
