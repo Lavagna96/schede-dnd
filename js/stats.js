@@ -531,6 +531,22 @@
       var martial = findFeatureByName(klass, view.subclassId, 'Arti Marziali');
       chips.push({ label: 'Arti Marziali', detail: martialDie, title: 'Arti Marziali', desc: martial ? martial.desc : '' });
     }
+    /* Danno Bardico (Collegio della Danza): stessa idea di Arti Marziali —
+       il dado Ispirazione Bardica sostituisce il danno normale di un Colpo
+       Senz'Armi, chip puramente informativo (l'app non tira mai dadi al
+       posto del giocatore). */
+    if (ch.classId === 'bardo' && view.subclassId === 'danza') {
+      var bardicDie = (klass.bardicDie || [])[view.level];
+      if (bardicDie) {
+        var danzaFeat = findFeatureByName(klass, view.subclassId, 'Piedi Scintillanti');
+        chips.push({
+          label: 'Danno Bardico',
+          detail: bardicDie + '+DES invece del danno normale',
+          title: 'Piedi Scintillanti',
+          desc: danzaFeat ? danzaFeat.desc : ''
+        });
+      }
+    }
     /* Punizione Divina (Paladino): prima una card a parte con 3 righe piene +
        una nota fissa (progressione dei dadi per livello di slot, bonus contro
        Immondi/Non Morti, gratuita 1/riposo lungo) — ora un solo chip qui, con

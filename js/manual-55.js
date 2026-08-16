@@ -13,7 +13,7 @@
  * quando `version` locale è più nuova di quella remota.
  */
 window.MANUAL_55 = {
-  version: 52,
+  version: 53,
 
   slotTables: {
     /* slot per livello di classe: array di slot per livello incantesimo 1..9 */
@@ -324,18 +324,41 @@ window.MANUAL_55 = {
           { name: 'Parole della Creazione', desc: 'Hai sempre preparati gli incantesimi Parola di Potere: Guarigione e Parola di Potere: Morte. Quando lanci uno dei due, puoi colpire anche una seconda creatura entro 3 m dal primo bersaglio.' }
         ]
       },
-      /* Collegi del Bardo: Sapienza, Incanto e Valore fatti (PHB p.62-66).
-         Incanto è descrittivo come la Sapienza (riusa solo Ispirazione
-         Bardica). Valore dà davvero Attacco Extra al 6°: `extraAttacks` qui
-         sotto è letto da `stats.js` in aggiunta alla tabella di classe
-         (nessuna classe Bardo ne ha una propria), stesso principio già usato
-         per generalizzare Guerriero/Barbaro/Paladino/Ranger. Danza resta
-         fuori: dà una CA alternativa a DUE caratteristiche (DES+CAR, mai
-         vista finora — `unarmoredDefense` di classe supporta solo una) e
-         trasforma i Colpi Senz'Armi in un'arma vera e propria (dado
-         Ispirazione + Destrezza al posto del danno normale), una scelta di
-         UX (come mostrarlo nella tabella Attacchi) da discutere con Andrea. */
+      /* Collegi del Bardo: Sapienza, Incanto e Valore fatti (PHB p.62-66), ora
+         anche Danza (p.63-64, Fase 5 completata). Incanto è descrittivo come
+         la Sapienza (riusa solo Ispirazione Bardica). Valore dà davvero
+         Attacco Extra al 6°: `extraAttacks` qui sotto è letto da `stats.js`
+         in aggiunta alla tabella di classe (nessuna classe Bardo ne ha una
+         propria), stesso principio già usato per generalizzare Guerriero/
+         Barbaro/Paladino/Ranger. Danza dà una CA alternativa a DUE
+         caratteristiche (10+DES+CAR, `unarmoredDefense`/
+         `unarmoredDefenseNoShield` qui sotto, letti anche a livello di
+         sottoclasse da js/engine.js — stesso schema dello Stregoneria
+         Draconica dello Stregone) e trasforma i Colpi Senz'Armi in un vero
+         attacco (dado Ispirazione + Destrezza al posto del danno normale):
+         come Arti Marziali del Monaco, resta un chip informativo in
+         "Stile & Privilegi" sotto la tabella Attacchi (js/stats.js,
+         `buildAttackChips`) invece di un calcolo automatico — l'app non tira
+         mai dadi al posto del giocatore. */
       subclasses: {
+        danza: {
+          name: 'Collegio della Danza',
+          tenets: 'Cerca l\'armonia con il cosmo attraverso agilità, velocità e grazia nel movimento.',
+          unarmoredDefense: 'CAR', // CA senz'armatura = 10+DES+CAR, solo senza scudo (Fase 5)
+          unarmoredDefenseNoShield: true,
+          features: {
+            3: [
+              { name: 'Piedi Scintillanti', desc: 'Mentre non indossi armatura né impugni uno scudo: hai vantaggio alle prove di Carisma (Intrattenere) che coinvolgono la danza; la tua CA base è 10 + modificatore di Destrezza + modificatore di Carisma; spendendo un uso di Ispirazione Bardica come parte di un\'azione, un\'azione bonus o una reazione puoi aggiungere un Colpo Senz\'Armi a quell\'azione; puoi usare la Destrezza al posto della Forza per colpire con i Colpi Senz\'Armi, e infliggere con essi un tiro del tuo dado Ispirazione Bardica più il modificatore di Destrezza al posto del danno normale, senza consumare il dado.' }
+            ],
+            6: [
+              { name: 'Movimento Ispirato', desc: 'Quando un nemico che vedi termina il turno entro 1,5 m da te, puoi usare una reazione e spendere un uso di Ispirazione Bardica per muoverti fino a metà della tua velocità; un alleato a tua scelta entro 9 m può fare lo stesso con la sua reazione. Nessuno dei due movimenti provoca attacchi di opportunità.' },
+              { name: 'Gioco di Gambe Sincronizzato', desc: 'Quando tiri l\'iniziativa, se non sei Incapacitato puoi spendere un uso di Ispirazione Bardica: tiri il dado, e tu e ogni alleato entro 9 m che ti vede o sente ottenete un bonus all\'iniziativa pari al risultato.' }
+            ],
+            14: [
+              { name: 'Evasione Guidata', desc: 'Quando un effetto ti concede un TS di Destrezza per dimezzare un danno, con un successo non subisci alcun danno e con un fallimento ne subisci solo metà; le creature entro 1,5 m da te che affrontano lo stesso TS possono condividere questo beneficio con te. Non puoi usarlo se sei Incapacitato.' }
+            ]
+          }
+        },
         sapienza: {
           name: 'Collegio della Sapienza',
           tenets: 'Raccoglie incantesimi e segreti da fonti diverse, condividendo il sapere in biblioteche e università.',
@@ -2304,15 +2327,16 @@ window.MANUAL_55 = {
         ]
       },
       /* Sottoclassi dello Stregone: Aberrante, Meccanica e Magia Selvaggia
-         fatte (PHB 2024 p.144-148) — tutte descrittive, riusano solo Punti
-         Stregoneria/Magia Innata già tracciati. Draconica resta fuori:
-         Resilienza Draconica dà +3 PF max al 3° e +1 per ogni livello da
-         stregone successivo (una scala PER-LIVELLO di SOTTOCLASSE sui PF
-         massimi, mai vista finora) E una CA senz'armatura a DUE
-         caratteristiche insieme (10+DES+CAR, stesso problema del Collegio
-         della Danza del Bardo) — due architetture nuove insieme, da
-         discutere con Andrea. Lo Stregone non ha Maestria nelle Armi né
-         stile di combattimento. */
+         fatte (PHB 2024 p.144-148), ora anche Draconica (p.141-142, Fase 5
+         completata). Resilienza Draconica dà +3 PF max al 3° e +1 per ogni
+         livello da stregone successivo — modellato in `CLASS_BONUSES.
+         stregone.draconicResilience` di js/engine.js (il bonus finale è
+         semplicemente il livello del personaggio) — e una CA senz'armatura a
+         due caratteristiche (10+DES+CAR, nessuna esclusione scudo a
+         differenza del Collegio della Danza del Bardo) via
+         `unarmoredDefense: 'CAR'` qui sotto, ora letto anche a livello di
+         sottoclassa da js/engine.js. Lo Stregone non ha Maestria nelle Armi
+         né stile di combattimento. */
       subclasses: {
         aberrante: {
           name: 'Stregoneria Aberrante',
@@ -2410,6 +2434,46 @@ window.MANUAL_55 = {
             ],
             18: [
               { name: 'Impennata Domata', desc: 'Subito dopo aver lanciato un incantesimo da stregone con uno slot, puoi scegliere un effetto a tua scelta dalla Tabella di Impennata di Magia Selvaggia (tranne l\'ultima riga) invece di tirare, effettuando comunque i tiri richiesti dall\'effetto scelto. Puoi usarlo una volta per riposo lungo.' }
+            ]
+          }
+        },
+        draconica: {
+          name: 'Stregoneria Draconica',
+          tenets: 'Il tuo potere innato viene dal dono di un drago, per discendenza, contatto o eredità.',
+          unarmoredDefense: 'CAR', // CA senz'armatura = 10+DES+CAR, nessuna esclusione scudo (Fase 5)
+          spellsByLevel: {
+            3: [
+              { id: 'alterare-se', name: 'Alterare Sé' },
+              { id: 'sfera-cromatica', name: 'Sfera Cromatica' },
+              { id: 'comando', name: 'Comando' },
+              { id: 'soffio-di-drago', name: 'Soffio di Drago' }
+            ],
+            5: [
+              { id: 'paura', name: 'Paura' },
+              { id: 'volare', name: 'Volare' }
+            ],
+            7: [
+              { id: 'occhio-arcano', name: 'Occhio Arcano' },
+              { id: 'ammaliare-mostro', name: 'Ammaliare Mostro' }
+            ],
+            9: [
+              { id: 'ricordo-leggendario', name: 'Ricordo Leggendario' },
+              { id: 'evocare-drago', name: 'Evocare Drago' }
+            ]
+          },
+          features: {
+            3: [
+              { name: 'Resilienza Draconica', desc: 'Il tuo dono draconico si manifesta nel corpo: i tuoi PF massimi aumentano di 3 e salgono di 1 a ogni ulteriore livello da stregone. Sei inoltre coperto in parte da scaglie: quando non indossi armatura, la tua CA base è 10 + modificatore di Destrezza + modificatore di Carisma (lo scudo resta comunque utilizzabile).' },
+              { name: 'Incantesimi Draconici', desc: 'Quando raggiungi i livelli da stregone indicati, hai sempre preparati gli incantesimi elencati (non contano nel numero di incantesimi preparabili).' }
+            ],
+            6: [
+              { name: 'Affinità Elementale', desc: 'Scegli un tipo di danno associato ai draghi (Acido, Freddo, Fuoco, Fulmine o Veleno): ottieni resistenza a quel tipo di danno e, quando lanci un incantesimo che infligge danno di quel tipo, puoi sommare il tuo modificatore di Carisma a uno dei tiri per i danni dell\'incantesimo.' }
+            ],
+            14: [
+              { name: 'Ali Draconiche', desc: 'Come azione bonus, ti spuntano ali draconiche sulla schiena per 1 ora (finché non le dismetti, nessuna azione richiesta): per la durata hai velocità di volo di 18 m. Una volta usato serve un riposo lungo per riusarlo, oppure spendi 3 Punti Stregoneria (nessuna azione) per ripristinarlo.' }
+            ],
+            18: [
+              { name: 'Compagno Draconico', desc: 'Puoi lanciare Evocare Drago senza componente materiale, e una volta senza spendere uno slot (recuperi questo uso al riposo lungo). Lanciandolo, puoi rinunciare alla Concentrazione: in tal caso la durata scende a 1 minuto.' }
             ]
           }
         }
@@ -2872,7 +2936,7 @@ window.MANUAL_55 = {
       meta: 'Azione · 9 m · 1 min CONC · V, S, M',
       desc: 'Fino a 3 creature aggiungono 1d4 ai tiri per colpire e ai tiri salvezza finché dura. +1 bersaglio per ogni slot oltre il 1°.' },
     { id: 'comando', name: 'Comando', level: 1, school: 'Incantamento',
-      classes: ['paladino', 'bardo', 'chierico', 'warlock'],
+      classes: ['paladino', 'bardo', 'chierico', 'warlock', 'stregone'],
       meta: 'Azione · 18 m · 1 round · V',
       desc: 'Un nemico che capisca una lingua fa TS Saggezza: se fallisce esegue un comando di una parola per il suo prossimo turno. Comandi tipici: Avanzare, Cadere, Fuggi, Rannicchiati, Vieni. Niente concentrazione. +1 bersaglio per ogni slot oltre il 1°.' },
     { id: 'cura-ferite', name: 'Cura Ferite', level: 1, school: 'Abiurazione',
@@ -3123,7 +3187,7 @@ window.MANUAL_55 = {
 
     /* ===== 5° livello ===== */
     { id: 'ricordo-leggendario', name: 'Ricordo Leggendario', level: 5, school: 'Divinazione',
-      classes: ['bardo', 'chierico', 'mago'],
+      classes: ['bardo', 'chierico', 'mago', 'stregone'],
       meta: '10 minuti · Sé · Istantaneo · V, S, M (incenso e strisce d\'avorio, consumati)',
       desc: 'Nomini o descrivi una persona, un luogo o un oggetto famosi: ricevi un riassunto delle informazioni leggendarie che li riguardano, decise dal master.' },
     { id: 'tenere-mostri', name: 'Tenere Mostri', level: 5, school: 'Incantamento',
@@ -4545,7 +4609,7 @@ window.MANUAL_55 = {
       meta: '1 minuto o Rituale · 9 m · 1 ora · V, S',
       desc: 'Una creatura Grande, quasi reale e simile a un cavallo appare in uno spazio libero entro gittata (aspetto a tua scelta, equipaggiata con sella, morso e briglie che svaniscono se allontanate più di 3 m dal destriero). Tu o una creatura a tua scelta potete cavalcarlo per la durata: usa le statistiche del Cavallo da Sella ma con Velocità di 30 m e può percorrere 21 km in un\'ora. Alla fine svanisce gradualmente, dando 1 minuto per smontare; l\'incantesimo finisce prima se il destriero subisce danno.' },
     { id: 'occhio-arcano', name: 'Occhio Arcano', level: 4, school: 'Divinazione',
-      classes: ['mago', 'chierico'],
+      classes: ['mago', 'chierico', 'stregone'],
       meta: 'Azione · 9 m · 1 ora CONC · V, S, M (un po\' di pelo di pipistrello)',
       desc: 'Crei un occhio invisibile e invulnerabile che fluttua entro gittata per la durata: ricevi mentalmente le sue informazioni visive (visione in ogni direzione, Scurovisione fino a 9 m). Con un\'azione bonus lo sposti fino a 9 m; le barriere solide bloccano il suo movimento, ma può passare attraverso aperture larghe anche solo 2,5 cm.' },
     { id: 'tentacoli-neri-di-evard', name: 'Tentacoli Neri di Evard', level: 4, school: 'Convocazione',
@@ -4581,7 +4645,7 @@ window.MANUAL_55 = {
       meta: 'Azione · 9 m · 1 ora · V, S, M (un pizzico di semi di sesamo)',
       desc: 'Un passaggio appare su una superficie di legno, gesso o pietra entro gittata e dura per la durata: scegli le dimensioni dell\'apertura, fino a 1,5 m di larghezza, 2,4 m di altezza e 6 m di profondità, senza destabilizzare la struttura circostante. Quando l\'apertura scompare, chi si trova ancora nel passaggio viene espulso in sicurezza nello spazio libero più vicino.' },
     { id: 'evocare-drago', name: 'Evocare Drago', level: 5, school: 'Convocazione',
-      classes: ['mago'],
+      classes: ['mago', 'stregone'],
       meta: 'Azione · 18 m · 1 ora CONC · V, S, M (un oggetto con l\'immagine di un drago inciso, da 500+ MO)',
       desc: 'Evochi uno spirito Draconico (statistiche proprie) in uno spazio libero entro gittata: combatte al tuo fianco condividendo la tua iniziativa e obbedendo ai tuoi comandi verbali senza bisogno di azione da parte tua; senza ordini si Disimpegna e si muove per evitare pericoli. Sparisce a 0 PF o alla fine dell\'incantesimo.' },
     { id: 'muro-di-forza', name: 'Muro di Forza', level: 5, school: 'Evocazione',
