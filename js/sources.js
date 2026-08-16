@@ -12,6 +12,12 @@
 
   var LS_PREFIX = 'app-source-';
 
+  // Nome corto in etichetta, nome per esteso per menu/filtri. Un solo posto
+  // dove aggiungere una fonte futura: qui + il tag `source` sulle voci.
+  var LABELS = {
+    'heroes-faerun': { short: 'FR', name: 'Eroi di Faerûn' }
+  };
+
   function isEnabled(sourceId) {
     return localStorage.getItem(LS_PREFIX + sourceId) === '1';
   }
@@ -24,8 +30,19 @@
     }
   }
 
+  // Fonti opzionali (diverse dal PHB) attualmente attive: usato dai filtri
+  // per incantesimi/sottoclassi, così una nuova fonte compare da sola senza
+  // toccare grimorio.js.
+  function activeOptional() {
+    return Object.keys(LABELS).filter(isEnabled).map(function (id) {
+      return { id: id, short: LABELS[id].short, name: LABELS[id].name };
+    });
+  }
+
   window.AppSources = {
     isEnabled: isEnabled,
-    setEnabled: setEnabled
+    setEnabled: setEnabled,
+    label: function (sourceId) { return (LABELS[sourceId] || {}).name || sourceId; },
+    activeOptional: activeOptional
   };
 })();

@@ -4,6 +4,56 @@
 
   /* ---------- dati ---------- */
 
+  // Filtro fonte per le 3 liste incantesimi (Glossario, Manuale, picker
+  // "tutte le classi"): 'all' = tutte le fonti attive, 'phb' = solo PHB
+  // 2024, altrimenti l'id di una fonte opzionale (es. 'heroes-faerun').
+  // Stato separato per lista, così cambiarne una non tocca le altre.
+  var sourceFilters = { gloss: 'all', manual: 'all', free: 'all' };
+
+  function spellMatchesFilter(spell, filter) {
+    if (filter === 'all') {
+      return true;
+    }
+    if (filter === 'phb') {
+      return !spell.source;
+    }
+
+    return spell.source === filter;
+  }
+
+  // Riga di chip "Tutte le fonti / Manuale 2024 / <fonte opzionale>",
+  // riusa lo stesso stile .manual-chip dei filtri classe. Compare solo se
+  // almeno una fonte opzionale è attiva (altrimenti c'è solo il PHB: nessun
+  // filtro da mostrare, comportamento identico a prima di questa funzione).
+  function renderSourceChips(containerId, filterKey, onChange) {
+    var chips = document.getElementById(containerId);
+    if (!chips) {
+      return;
+    }
+    var optional = window.AppSources ? window.AppSources.activeOptional() : [];
+    if (optional.length === 0) {
+      chips.innerHTML = '';
+      chips.classList.add('hidden');
+
+      return;
+    }
+    chips.classList.remove('hidden');
+    chips.innerHTML = '';
+    var options = [{ id: 'all', name: 'Tutte le fonti' }, { id: 'phb', name: 'Manuale 2024' }]
+      .concat(optional.map(function (s) { return { id: s.id, name: s.name }; }));
+    options.forEach(function (opt) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'manual-chip' + (opt.id === sourceFilters[filterKey] ? ' active' : '');
+      chip.textContent = opt.name;
+      chip.addEventListener('click', function () {
+        sourceFilters[filterKey] = opt.id;
+        onChange();
+      });
+      chips.appendChild(chip);
+    });
+  }
+
   function character() {
     return window.AppStorage.getState().character;
   }
@@ -435,11 +485,14 @@
     if (!list || !klass) {
       return;
     }
+    renderSourceChips('gloss-sources', 'gloss', renderGlossList);
     list.innerHTML = '';
     var maxLvl = getMaxSlotLevel();
     var fixedIds = getFixedIds();
     var preparedIds = getPreparedIds();
-    var classSpells = getClassSpells(character().classId);
+    var classSpells = getClassSpells(character().classId).filter(function (s) {
+      return spellMatchesFilter(s, sourceFilters.gloss);
+    });
     for (var lvl = 1; lvl <= maxLvl; lvl++) {
       (function (level) {
         var spells = classSpells.filter(function (s) { return s.level === level; });
@@ -522,8 +575,11 @@
         chips.scrollLeft = Math.max(0, active.offsetLeft - chips.clientWidth / 2 + active.offsetWidth / 2);
       }
     }
+    renderSourceChips('manual-sources', 'manual', renderManualList);
     list.innerHTML = '';
-    var spells = getClassSpells(manualClassId);
+    var spells = getClassSpells(manualClassId).filter(function (s) {
+      return spellMatchesFilter(s, sourceFilters.manual);
+    });
     var levels = [];
     spells.forEach(function (s) {
       if (levels.indexOf(s.level) === -1) {
@@ -636,9 +692,12 @@
         chips.scrollLeft = Math.max(0, active.offsetLeft - chips.clientWidth / 2 + active.offsetWidth / 2);
       }
     }
+    renderSourceChips('free-spells-sources', 'free', renderFreeSpellsList);
     list.innerHTML = '';
     var locked = getLockedIds();
-    var spells = getClassSpells(freeClassId);
+    var spells = getClassSpells(freeClassId).filter(function (s) {
+      return spellMatchesFilter(s, sourceFilters.free);
+    });
     var levels = [];
     spells.forEach(function (s) {
       if (levels.indexOf(s.level) === -1) {
