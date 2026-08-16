@@ -9,7 +9,64 @@
 
 ## Dove siamo
 
-- **Ultimo aggiornamento:** 2026-08-06
+- **Ultimo aggiornamento:** 2026-08-16
+- **Nota di sessione (2026-08-16): ripresa la Fase 5, risolto il problema
+  architetturale "CA su due caratteristiche"** — FATTO. Le due sottoclassi
+  rimandate per questo motivo (Collegio della Danza del Bardo, Stregoneria
+  Draconica dello Stregone) sono ora entrambe modellate, portando **Bardo e
+  Stregone a 4/4 sottoclassi complete**. Il problema si è rivelato più
+  semplice del previsto (stesso schema di auto-correzione già visto col
+  Warlock): il motore già supportava bonus scoped a una sottoclasse
+  (Arma Sacra, risorse del Guerriero, iniziativa del Ranger), mancava solo
+  estendere la CA senz'armatura allo stesso principio.
+  **Motore** (`js/engine.js`): `derive()` ora legge anche
+  `subclass.unarmoredDefense`/`subclass.unarmoredDefenseNoShield` (prima
+  solo `klass.unarmoredDefense`), sottoclasse con priorità sulla classe —
+  stesso schema già usato per `extraAttacks` (Collegio del Valore). Nuovo
+  `CLASS_BONUSES.stregone.draconicResilience` per i PF massimi che scalano
+  per livello di sottoclasse (+3 al 3°, +1 per ogni livello da stregone
+  successivo — il bonus finale coincide semplicemente col livello del
+  personaggio).
+  **Stregoneria Draconica** (`js/manual-55.js`): CA = 10+DES+CAR senza
+  esclusione scudo (testo PHB verificato: "While you aren't wearing
+  armor...", nessuna menzione di scudo, a differenza della Danza),
+  Incantesimi Draconici (Alterare Sé/Sfera Cromatica/Comando/Soffio di
+  Drago al 3°, Paura/Volare al 5°, Occhio Arcano/Ammaliare Mostro al 7°,
+  Ricordo Leggendario/Evocare Drago al 9°, tutti già nel catalogo — 4 hanno
+  ricevuto il tag `'stregone'` nuovo: Comando, Occhio Arcano, Ricordo
+  Leggendario, Evocare Drago), Affinità Elementale (descrittiva, resistenza
+  + CAR a un tiro danni), Ali Draconiche (14°, volo temporaneo) e Compagno
+  Draconico (18°). Nessun incantesimo nuovo nel catalogo.
+  **Collegio della Danza** (`js/manual-55.js`): CA = 10+DES+CAR **con**
+  esclusione scudo (`unarmoredDefenseNoShield: true`, testo PHB: "While you
+  aren't wearing armor or wielding a Shield..."). Il secondo problema che
+  teneva ferma questa sottoclasse — Colpi Micidiali/Danno Bardico che
+  trasformano i Colpi Senz'Armi in un attacco vero (dado Ispirazione +
+  Destrezza) — non ha richiesto una scelta di design nuova: esiste già un
+  precedente identico, Arti Marziali del Monaco, mostrato come chip
+  informativo in "Stile & Privilegi" sotto la tabella Attacchi (l'app non
+  tira mai dadi al posto del giocatore). Nuovo chip "Danno Bardico" in
+  `js/stats.js` (`buildAttackChips`), stesso meccanismo. Movimento
+  Ispirato/Gioco di Gambe Sincronizzato (6°) ed Evasione Guidata (14°)
+  restano descrittivi.
+  Manuale `version` 52→53, cache busting `?v=235`→`?v=236`.
+  **Verificato**: harness isolato (`AppEngine.derive` con personaggi finti)
+  su CA/PF per Stregone Draconica L3/L5 con e senza scudo, Bardo Danza L3
+  con e senza scudo, più non-regressione su Stregone Aberrante, Bardo
+  Valore, Barbaro, Monaco (con scudo), Paladino con armatura — tutti i
+  numeri tornano esatti a mano. Controprova nell'app reale (stato
+  simulato via `localStorage`, gate di login bypassato solo per il test,
+  dati di test rimossi a fine sessione): Bardo Danza L3 mostra CA 15,
+  chip "Danno Bardico d6+DES invece del danno normale" che apre "Piedi
+  Scintillanti" nel bottom sheet con la descrizione corretta; Stregone
+  Draconica L5 con scudo mostra CA 17 (15+2 scudo, CAR non esclusa) e PF
+  32 (27 base + 5 bonus draconico). Console pulita in ogni prova.
+  **Non ancora committato/deployato a fine sessione.**
+  Restano ora solo 4 sottoclassi rimandate (2 problemi architetturali
+  distinti): Guerriero (Cavaliere Occulto) + Ladro (Truffatore Arcano) per
+  l'incantatore legato alla sottoclasse, Circolo della Terra (Druido) per
+  il picker di terreno cambiabile a riposo lungo, Tradizione
+  dell'Abiurazione (Mago) per il pool di PF con assorbimento/rigenerazione.
 - **Nota di sessione (2026-08-05):** la roadmap era ferma al 2026-08-02 ma
   in mezzo sono passati **9 commit non registrati qui** (2026-08-03 →
   2026-08-05, tutti committati, pushati e deployati, `origin/main`
