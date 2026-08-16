@@ -143,6 +143,67 @@
   border-color: var(--border-gold-soft);
 }
 
+/* Switch on/off riusabile per qualunque funzionalità da accendere/spegnere
+   (Face ID, fonti opzionali del manuale, ecc.): un .app-menu-item con
+   role="switch" e aria-checked che l'unica sorgente di verità visiva —
+   nessuna classe .on/.off separata da tenere sincronizzata. Verde smeraldo
+   per lo stato attivo: l'oro resta riservato alle azioni primarie. */
+.app-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.app-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.app-toggle-name {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.app-toggle-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.app-toggle-switch-ui {
+  flex: none;
+  width: 44px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  position: relative;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.app-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #8a8880;
+  transition: left 0.18s ease, background 0.18s ease;
+}
+
+.app-toggle-item[aria-checked="true"] .app-toggle-switch-ui {
+  background: var(--celest);
+  border-color: var(--celest-bright);
+}
+
+.app-toggle-item[aria-checked="true"] .app-toggle-thumb {
+  left: 22px;
+  background: #e8f5ef;
+}
+
 .app-menu-divider {
   height: 1px;
   background: var(--border-gold-soft);

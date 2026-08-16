@@ -491,9 +491,7 @@ import {
     if (!btn || btn.classList.contains('hidden')) {
       return;
     }
-    btn.textContent = window.AppFaceId && AppFaceId.isEnabled()
-      ? 'Disattiva sblocco con Face ID'
-      : 'Attiva sblocco con Face ID';
+    btn.setAttribute('aria-checked', window.AppFaceId && AppFaceId.isEnabled() ? 'true' : 'false');
   }
 
   /* ---------- vista di login ---------- */
