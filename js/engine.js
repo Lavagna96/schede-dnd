@@ -85,6 +85,15 @@
       // bonus di sottoclasse non su 'ts'/'attacco' ecc. ma sull'iniziativa —
       // stesso filtro subclass già in uso, letto a parte più sotto.
       gloomInit: { ability: 'SAG', min: 0, subclass: 'cercatore-ombre' }
+    },
+    stregone: {
+      // Resilienza Draconica (Stregoneria Draconica): +3 PF max al 3° livello,
+      // poi +1 per ogni livello da stregone successivo — a differenza degli
+      // altri bonus qui sopra non scala da un modificatore ma dal livello
+      // stesso, quindi il bonus finale è semplicemente il livello del
+      // personaggio (3 al 3°, 4 al 4°, ecc.). Letto a parte più sotto, vicino
+      // al calcolo di hpMax.
+      draconicResilience: { subclass: 'draconica', from: 3 }
     }
   };
 
@@ -250,6 +259,7 @@
   function derive(ch) {
     var manual = window.MANUAL_55 || { classes: {}, slotTables: {} };
     var klass = manual.classes[ch.classId] || {};
+    var subclass = (klass.subclasses || {})[ch.subclassId] || {};
     var pb = profBonus(ch.level);
 
     var mods = {};
@@ -326,12 +336,22 @@
     } else {
       /* CA senza armatura alternativa (Blocco 5.A.2): alcune classi sostituiscono
          la formula base con 10 + DES + una loro caratteristica (Barbaro: COS,
-         Monaco: SAG). Il dato vive in klass.unarmoredDefense (js/manual-55.js).
-         Il Barbaro la mantiene anche con lo scudo in mano (lo dice il PHB), il
-         Monaco no (`unarmoredDefenseNoShield`): con lo scudo perde il bonus di
-         SAG ma non lo scudo stesso, sommato comunque più sotto. */
-      var udApplies = !klass.unarmoredDefenseNoShield || !hasShield;
-      ac = 10 + mods.DES + (klass.unarmoredDefense && udApplies ? mods[klass.unarmoredDefense] : 0);
+         Monaco: SAG). Il dato vive in klass.unarmoredDefense (js/manual-55.js),
+         oppure in subclass.unarmoredDefense quando è la sottoclasse a darla
+         (Collegio della Danza del Bardo, Stregoneria Draconica dello Stregone:
+         entrambe 10+DES+CAR — stesso schema già usato per extraAttacks/
+         classResources scoped a una sottoclasse, la sottoclasse vince se
+         presente). Il Barbaro la mantiene anche con lo scudo in mano (lo dice
+         il PHB), il Monaco e il Collegio della Danza no
+         (`unarmoredDefenseNoShield`): con lo scudo perdono il bonus della
+         seconda caratteristica ma non lo scudo stesso, sommato comunque più
+         sotto. */
+      var udAbility = subclass.unarmoredDefense || klass.unarmoredDefense;
+      var udNoShield = subclass.unarmoredDefense
+        ? subclass.unarmoredDefenseNoShield
+        : klass.unarmoredDefenseNoShield;
+      var udApplies = !udNoShield || !hasShield;
+      ac = 10 + mods.DES + (udAbility && udApplies ? mods[udAbility] : 0);
     }
     var defenseBonus = (ch.fightingStyle === 'difesa' && hasArmor) ? 1 : 0;
     var defaultShieldAc = ((window.MANUAL_55 && window.MANUAL_55.shield) || {}).ac || 2;
@@ -372,8 +392,11 @@
 
     /* PF massimi: dado pieno al 1° livello, media fissa dai successivi */
     var die = parseInt((klass.hitDie || 'd8').slice(1), 10);
+    var draconicDef = bonuses.draconicResilience;
+    var draconicHpBonus = (draconicDef && ch.subclassId === draconicDef.subclass && ch.level >= draconicDef.from)
+      ? ch.level : 0;
     var hpMax = die + mods.COS + (ch.level - 1) * (die / 2 + 1 + mods.COS) +
-                modSum(ch, 'pf-max');
+                draconicHpBonus + modSum(ch, 'pf-max');
 
     /* Destriero (5.B.3): esiste solo se la classe lo concede a questo livello
        — per il Paladino è Destriero Fedele, che dà Trova Destriero sempre
