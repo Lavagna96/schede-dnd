@@ -105,6 +105,17 @@
     var klass = manual.classes[character.classId] || {};
     var cp = klass.choicePoints || {};
 
+    // Massimo preparati a un dato livello: normalmente dalla tabella di
+    // classe, ma un "terzo" incantatore (Cavaliere Occulto/Truffatore
+    // Arcano, Fase 5) ce l'ha solo a livello di sottoclasse — la classe
+    // base (Guerriero/Ladro) resta 'none' per chi non la sceglie.
+    function preparedMaxAt(charLevel, subclassId) {
+      var sub = (klass.subclasses || {})[subclassId] || {};
+      var table = sub.preparedByLevel || klass.preparedByLevel || [];
+
+      return table[charLevel] || 0;
+    }
+
     var needsAsi = (cp.asi || []).indexOf(nextLevel) !== -1;
     var needsStyle = cp.fightingStyle === nextLevel;
     var needsSubclass = cp.subclass === nextLevel;
@@ -178,6 +189,16 @@
     function computeDraft() {
       var draft = JSON.parse(JSON.stringify(character));
       draft.level = nextLevel;
+      // La sottoclasse scelta a questo livello non finiva mai nel draft (solo
+      // nello stato salvato al termine): qualunque guadagno dipendente dalla
+      // sottoclasse (slot/preparati del "terzo" incantatore, risorse
+      // subclass-scoped) restava invisibile nell'anteprima "Guadagni
+      // automatici" e nel controllo che decide se mostrare il passo guidato
+      // "Aggiorna incantesimi". Stessa formula di `effectiveSubclassId` più
+      // sotto.
+      if (needsSubclass) {
+        draft.subclassId = choice.subclassId || autoSubclassId || character.subclassId;
+      }
       if (choice.mode === 'asi') {
         ABILITY_ORDER.forEach(function (k) {
           draft.abilities[k] = character.abilities[k] + choice.pendingDeltas[k];
@@ -327,8 +348,8 @@
         rows++;
       }
 
-      var prepBefore = (klass.preparedByLevel || [])[level];
-      var prepAfter = (klass.preparedByLevel || [])[nextLevel];
+      var prepBefore = preparedMaxAt(level, character.subclassId);
+      var prepAfter = preparedMaxAt(nextLevel, draft.subclassId);
       if (prepBefore !== prepAfter) {
         gainsContainer.appendChild(buildGainRow('Incantesimi Preparati', prepBefore, prepAfter));
         rows++;
@@ -838,6 +859,11 @@
       var ch = state.character;
 
       var viewBefore = window.AppEngine.derive(ch);
+      // ch.subclassId viene mutato più sotto se questo livello sceglie la
+      // sottoclasse: va congelato ORA per il confronto prima/dopo qualche
+      // riga più giù (preparedMaxAt), altrimenti "prima" leggerebbe già il
+      // valore nuovo.
+      var subclassIdBefore = ch.subclassId;
       var finalDraft = computeDraft();
       var viewAfter = window.AppEngine.derive(finalDraft);
 
@@ -921,8 +947,8 @@
       // di chiudere; altrimenti chiude subito come sempre.
       var slotsBefore = (viewBefore.slots || []).join('/');
       var slotsAfter = (viewAfter.slots || []).join('/');
-      var prepBefore = (klass.preparedByLevel || [])[level];
-      var prepAfter = (klass.preparedByLevel || [])[nextLevel];
+      var prepBefore = preparedMaxAt(level, subclassIdBefore);
+      var prepAfter = preparedMaxAt(nextLevel, finalDraft.subclassId);
 
       if (slotsBefore !== slotsAfter || prepBefore !== prepAfter) {
         pendingFinish = finishWizard;
@@ -995,7 +1021,7 @@
         var maxLvl = grim.getMaxSlotLevel();
         var fixedIds = grim.getFixedIds();
         var preparedIds = grim.getPreparedIds();
-        var classSpells = grim.getClassSpells(character.classId);
+        var classSpells = grim.getClassSpells(grim.getEffectiveSpellClassId());
         for (var lvl = 1; lvl <= maxLvl; lvl++) {
           var spells = classSpells.filter(function (s) { return s.level === lvl; });
           if (!spells.length) {

@@ -13,7 +13,7 @@
  * quando `version` locale è più nuova di quella remota.
  */
 window.MANUAL_55 = {
-  version: 53,
+  version: 54,
 
   slotTables: {
     /* slot per livello di classe: array di slot per livello incantesimo 1..9 */
@@ -30,7 +30,15 @@ window.MANUAL_55 = {
       [4, 3, 3, 3, 1], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2]],
     /* warlock: numero di slot di patto e loro livello */
     pactSlots: [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4],
-    pactSlotLevel: [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+    pactSlotLevel: [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    /* "Terzo" incantatore (Cavaliere Occulto del Guerriero, Truffatore Arcano
+       del Ladro, Fase 5): mai più del 3° livello di slot, tabella identica
+       per le due sottoclassi (PHB 2024 p.96/p.131). Letta da js/engine.js via
+       subclass.casterType invece che klass.casterType (la classe base resta
+       'none' per chi non sceglie questa sottoclassi). */
+    third: [null,
+      [], [], [2], [3], [3], [3], [4, 2], [4, 2], [4, 2], [4, 3], [4, 3], [4, 3],
+      [4, 3, 2], [4, 3, 2], [4, 3, 2], [4, 3, 3], [4, 3, 3], [4, 3, 3], [4, 3, 3], [4, 3, 3]]
   },
 
   classes: {
@@ -999,11 +1007,15 @@ window.MANUAL_55 = {
           { name: 'Tre Attacchi Extra', desc: 'Puoi attaccare quattro volte, invece di una, ogni volta che compi l\'azione di Attacco nel tuo turno.' }
         ]
       },
-      /* Sottoclassi del Guerriero: per ora solo Campione (PHB p.93), la più
-         semplice delle quattro (nessuna risorsa dedicata) — Maestro di
-         Battaglia, Cavaliere Occulto e Combattente Psionico si aggiungono in
-         seguito, stesso trattamento già dato alle sottoclassi di Paladino e
-         Barbaro. */
+      /* Sottoclassi del Guerriero: Campione, Maestro di Battaglia e
+         Combattente Psionico (PHB p.93 e p.98-99), ora anche Cavaliere
+         Occulto (p.95-97, Fase 5 completata): incantatore legato alla
+         SOTTOCLASSE (non alla classe, che resta 'none' per le altre tre) con
+         una propria lista di slot ('third' in slotTables) e incantesimi
+         scelti liberamente dalla lista del Mago (`spellListClassId`, letto
+         da js/grimorio.js al posto di `character.classId` ovunque serva il
+         "proprio" elenco incantesimi — Glossario, picker libero, passo
+         guidato del level-up). */
       subclasses: {
         campione: {
           name: 'Campione',
@@ -1075,6 +1087,31 @@ window.MANUAL_55 = {
             ],
             18: [
               { name: 'Maestro Telecinetico', desc: 'Hai sempre preparato Telecinesi e puoi lanciarlo senza slot né componenti (Intelligenza come caratteristica da incantatore per esso); mentre lo mantieni in concentrazione, incluso il turno in cui lo lanci, puoi attaccare con un\'arma come azione bonus. Una volta lanciato così, serve un riposo lungo per rifarlo, a meno di spendere un Dado di Energia Psionica per ripristinarne l\'uso.' }
+            ]
+          }
+        },
+        'cavaliere-occulto': {
+          name: 'Cavaliere Occulto',
+          tenets: 'Sostiene la maestria marziale con lo studio della magia arcana.',
+          casterType: 'third', spellAbility: 'INT', spellListClassId: 'mago',
+          preparedByLevel: [null, 0, 0, 3, 4, 4, 4, 5, 6, 6, 7, 8, 8, 9, 10, 10, 11, 11, 11, 12, 13],
+          slotLevelByLevel: [null, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3],
+          features: {
+            3: [
+              { name: 'Incantesimi', desc: 'Impari a incanalare magia arcana attraverso la disciplina marziale. Conosci due trucchetti dalla lista del Mago (un terzo dal 10° livello), sostituibili a ogni livello da guerriero. Prepari una lista di incantesimi di 1° livello o superiore dalla lista del Mago (3 all\'inizio, il numero cresce col livello), sostituibile progressivamente; l\'Intelligenza è la tua caratteristica da incantatore e puoi usare un Focus Arcano.' },
+              { name: 'Legame d\'Arme', desc: 'Con un rituale di un\'ora crei un legame magico con un\'arma: non puoi esserne disarmato (a meno di essere Incapacitato) e, se è sul tuo stesso piano, puoi richiamarla in mano come azione bonus. Puoi avere fino a due armi legate, ma ne richiami una sola per volta; legarne una terza scioglie uno dei legami precedenti.' }
+            ],
+            7: [
+              { name: 'Magia da Guerra', desc: 'Quando compi l\'azione di Attacco, puoi sostituire uno degli attacchi con il lancio di un tuo trucchetto da Mago con tempo di lancio di un\'azione.' }
+            ],
+            10: [
+              { name: 'Colpo Occulto', desc: 'Quando colpisci una creatura con un attacco d\'arma, quella creatura ha svantaggio al prossimo tiro salvezza contro un tuo incantesimo prima della fine del tuo prossimo turno.' }
+            ],
+            15: [
+              { name: 'Carica Arcana', desc: 'Quando usi Azione Impetuosa, puoi teletrasportarti fino a 9 m in uno spazio libero che vedi, prima o dopo l\'azione aggiuntiva.' }
+            ],
+            18: [
+              { name: 'Magia da Guerra Migliorata', desc: 'Quando compi l\'azione di Attacco, puoi sostituire due degli attacchi con il lancio di un incantesimo da Mago di 1° o 2° livello con tempo di lancio di un\'azione.' }
             ]
           }
         }
@@ -1199,10 +1236,9 @@ window.MANUAL_55 = {
         ]
       },
       /* Sottoclassi del Ladro: Ladro Esperto (PHB p.136), Assassino (p.134) e
-         Spadanima (p.135) — resta **Truffatore Arcano** (p.132), rimandato
-         come il Cavaliere Occulto del Guerriero: incantatore legato alla
-         SOTTOCLASSE con lista incantesimi del Mago, architettura non ancora
-         supportata dal motore. */
+         Spadanima (p.135), ora anche Truffatore Arcano (p.130-132, Fase 5
+         completata) — stesso trattamento del Cavaliere Occulto del Guerriero
+         (`casterType:'third'`/`spellListClassId:'mago'`, vedi commento lì). */
       subclasses: {
         esperto: {
           name: 'Ladro Esperto',
@@ -1258,6 +1294,31 @@ window.MANUAL_55 = {
             ],
             17: [
               { name: 'Frantumare la Mente', desc: 'Quando infliggi danno da Attacco Furtivo con una Lama Psichica, il bersaglio supera un TS di Saggezza (CD 8 + il tuo modificatore di Destrezza + il bonus di competenza) o ha la condizione Stordito per 1 minuto, ripetendo il TS alla fine di ogni suo turno. Una volta per riposo lungo, oppure spendendo tre Dadi di Energia Psionica per ripristinarne l\'uso.' }
+            ]
+          }
+        },
+        'truffatore-arcano': {
+          name: 'Truffatore Arcano',
+          tenets: 'Affina furtività e agilità con trucchi magici presi in prestito dal Mago.',
+          casterType: 'third', spellAbility: 'INT', spellListClassId: 'mago',
+          preparedByLevel: [null, 0, 0, 3, 4, 4, 4, 5, 6, 6, 7, 8, 8, 9, 10, 10, 11, 11, 11, 12, 13],
+          slotLevelByLevel: [null, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3],
+          spellsByLevel: {
+            3: [{ id: 'mano-magica', name: 'Mano Magica' }]
+          },
+          features: {
+            3: [
+              { name: 'Incantesimi', desc: 'Impari a incanalare magia arcana attraverso furtività e agilità. Conosci tre trucchetti — Mano Magica più altri due dalla lista del Mago (un quarto dal 10° livello) — sostituibili a ogni livello da ladro tranne Mano Magica. Prepari una lista di incantesimi di 1° livello o superiore dalla lista del Mago (3 all\'inizio, il numero cresce col livello), sostituibile progressivamente; l\'Intelligenza è la tua caratteristica da incantatore e puoi usare un Focus Arcano.' },
+              { name: 'Prestidigitazione con Mano Magica', desc: 'Puoi lanciare Mano Magica come azione bonus e rendere la mano spettrale Invisibile; puoi controllarla come azione bonus e farle compiere prove di Destrezza (Rapidità di Mano).' }
+            ],
+            9: [
+              { name: 'Imboscata Magica', desc: 'Se hai la condizione Invisibile quando lanci un incantesimo su una creatura, quella creatura ha svantaggio a ogni tiro salvezza contro l\'incantesimo fatto in quello stesso turno.' }
+            ],
+            13: [
+              { name: 'Truffatore Versatile', desc: 'Quando usi l\'effetto Sgambetto del Colpo Scaltro su una creatura, puoi applicarlo anche a un\'altra creatura entro 1,5 m dalla tua Mano Magica.' }
+            ],
+            17: [
+              { name: 'Ladro di Incantesimi', desc: 'Subito dopo che una creatura ti bersaglia con un incantesimo, puoi usare una reazione per farle fare un TS di Intelligenza (CD = la tua CD incantesimi): con un fallimento neghi l\'effetto su di te e, se l\'incantesimo è di 1° livello o superiore e di un livello che puoi lanciare, ne rubi la conoscenza per 8 ore — non serve che sia un incantesimo da Mago, e la creatura non può lanciarlo finché non passano. Una volta per riposo lungo.' }
             ]
           }
         }
@@ -3485,7 +3546,7 @@ window.MANUAL_55 = {
       meta: 'Azione · 3 m · 1 min CONC · S, M (trucco per il viso)',
       desc: 'Una creatura entro gittata fa TS Saggezza o è Affascinata finché dura (successo automatico se non è Umanoide, se ti sta combattendo, o se già bersaglio nelle ultime 24 ore).' },
     { id: 'mano-magica', name: 'Mano Magica', level: 0, school: 'Convocazione',
-      classes: ['bardo', 'stregone', 'warlock', 'mago'],
+      classes: ['bardo', 'stregone', 'warlock', 'mago', 'ladro'],
       meta: 'Azione · 9 m · 1 min · V, S',
       desc: 'Una mano spettrale manipola oggetti, apre porte o contenitori non chiusi a chiave, o versa il contenuto di una fiala. Non può attaccare, attivare oggetti magici, né portare più di 4,5 kg. Azione magica nei turni successivi per muoverla fino a 9 m.' },
     { id: 'scheggia-mentale', name: 'Scheggia Mentale', level: 0, school: 'Incantamento',

@@ -164,13 +164,37 @@
     return (state.grimoire && state.grimoire.prepared) || [];
   }
 
+  // Sottoclasse dell'incantatore corrente, se esiste (Cavaliere Occulto/
+  // Truffatore Arcano, Fase 5: "terzo" incantatore che vive solo a livello
+  // di sottoclasse, non di classe). {} se non caster o senza sottoclasse.
+  function getCasterSubclass() {
+    var klass = getManualClass();
+    if (!klass) {
+      return {};
+    }
+
+    return (klass.subclasses || {})[character().subclassId] || {};
+  }
+
+  // La classe di cui usare l'elenco incantesimi: normalmente la propria, ma
+  // per un "terzo" incantatore è quella del Mago (`spellListClassId` nei
+  // dati di sottoclasse). Usata ovunque prima si leggeva character().classId
+  // per popolare Glossario/picker libero/passo guidato del level-up.
+  function effectiveSpellClassId() {
+    var sub = getCasterSubclass();
+
+    return sub.spellListClassId || character().classId;
+  }
+
   function getMaxPrepared() {
     var klass = getManualClass();
     if (!klass) {
       return 0;
     }
+    var sub = getCasterSubclass();
+    var table = sub.preparedByLevel || klass.preparedByLevel || [];
 
-    return klass.preparedByLevel[character().level] || 0;
+    return table[character().level] || 0;
   }
 
   function getMaxSlotLevel() {
@@ -178,8 +202,10 @@
     if (!klass) {
       return 2;
     }
+    var sub = getCasterSubclass();
+    var table = sub.slotLevelByLevel || klass.slotLevelByLevel || [];
 
-    return klass.slotLevelByLevel[character().level] || 0;
+    return table[character().level] || 0;
   }
 
   /* Tutti gli incantesimi da mostrare nel grimorio: fissi + preparati scelti */
@@ -231,8 +257,10 @@
        pieno. La caratteristica giusta si legge da view.saves (stessa
        etichetta italiana già usata per i Tiri Salvezza). */
     if (chaLabelEl) {
-      var klass = (window.MANUAL_55.classes || {})[view.classId] || {};
-      var abilKey = klass.spellAbility || 'CAR';
+      // view.spellAbility è già la caratteristica giusta (di sottoclasse se
+      // presente, altrimenti di classe — vedi js/engine.js): niente bisogno
+      // di ri-derivarla qui da klass, come succedeva prima.
+      var abilKey = view.spellAbility || 'CAR';
       var abilRow = (view.saves || []).filter(function (s) { return s.key === abilKey; })[0];
       chaLabelEl.textContent = abilRow ? abilRow.label : 'Carisma';
     }
@@ -490,7 +518,7 @@
     var maxLvl = getMaxSlotLevel();
     var fixedIds = getFixedIds();
     var preparedIds = getPreparedIds();
-    var classSpells = getClassSpells(character().classId).filter(function (s) {
+    var classSpells = getClassSpells(effectiveSpellClassId()).filter(function (s) {
       return spellMatchesFilter(s, sourceFilters.gloss);
     });
     for (var lvl = 1; lvl <= maxLvl; lvl++) {
@@ -522,7 +550,11 @@
     }
     var title = document.getElementById('gloss-title');
     if (title) {
-      title.textContent = 'Glossario del ' + klass.name;
+      // Un "terzo" incantatore (Cavaliere Occulto/Truffatore Arcano) pesca
+      // dalla lista del Mago: titolo più chiaro col nome della sottoclasse
+      // invece che della classe base, che non ha incantesimi propri.
+      var sub = getCasterSubclass();
+      title.textContent = 'Glossario del ' + (sub.name || klass.name);
     }
     var hint = document.getElementById('gloss-hint');
     if (hint) {
@@ -552,7 +584,7 @@
       return;
     }
     if (!manualClassId) {
-      manualClassId = character().classId;
+      manualClassId = effectiveSpellClassId();
     }
     if (chips) {
       chips.innerHTML = '';
@@ -669,7 +701,7 @@
       return;
     }
     if (!freeClassId) {
-      freeClassId = character().classId;
+      freeClassId = effectiveSpellClassId();
     }
     if (chips) {
       chips.innerHTML = '';
@@ -727,7 +759,7 @@
     if (!modal) {
       return;
     }
-    freeClassId = character().classId;
+    freeClassId = effectiveSpellClassId();
     renderFreeSpellsList();
     modal.classList.remove('hidden');
   }
@@ -810,6 +842,10 @@
     getMaxSlotLevel: getMaxSlotLevel,
     getFixedIds: getFixedIds,
     togglePrepared: togglePrepared,
-    spellRow: spellRow
+    spellRow: spellRow,
+    // "Terzo" incantatore (Cavaliere Occulto/Truffatore Arcano, Fase 5):
+    // la lista da mostrare nel passo guidato del level-up è quella del Mago,
+    // non quella (vuota) della propria classe — vedi commento sopra.
+    getEffectiveSpellClassId: effectiveSpellClassId
   };
 })();
