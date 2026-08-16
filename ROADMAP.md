@@ -10,6 +10,81 @@
 ## Dove siamo
 
 - **Ultimo aggiornamento:** 2026-08-16
+- **Nota di sessione (2026-08-16, seconda parte): risolto il problema
+  architetturale "incantatore da sottoclasse"** — FATTO, stessa sessione di
+  "CA su due caratteristiche" sopra. Cavaliere Occulto (Guerriero) e
+  Truffatore Arcano (Ladro) sono ora modellati, portando **Guerriero e Ladro
+  a 4/4 sottoclassi complete**. Con questo **tutte e 11 le classi sono a
+  4/4**: la Fase 5 copre l'intera matrice classi × sottoclassi del PHB 2024.
+  Verificato sul PDF (p.95-97 Guerriero, p.130-132 Ladro): un vero "terzo"
+  incantatore, mai visto finora — tabella slot/preparati propria (mai oltre
+  il 3° livello di slot), incantesimi scelti liberamente dalla lista del
+  Mago invece che da un elenco fisso di sottoclasse. Il pool INT/lista Mago
+  è comunque risultato più semplice del temuto: il picker "incantesimi di
+  qualunque classe" (commit `1e20cd9`, sessione precedente) già lasciava
+  scegliere liberamente da qualsiasi lista — mancava solo collegare le
+  sottoclassi al meccanismo giusto, non costruirne uno nuovo.
+  **Motore** (`js/engine.js`): `spellAbility`/`casterType` letti anche da
+  `subclass` (non solo `klass`, come già `unarmoredDefense`); nuova tabella
+  condivisa `slotTables.third` (`js/manual-55.js`, identica per le due
+  sottoclassi). `view.spellAbility` ora esposto (prima solo il modText),
+  usato da `js/grimorio.js` al posto di ri-derivare la caratteristica da
+  `klass.spellAbility` (bug latente: sarebbe stato sbagliato per un "terzo"
+  incantatore).
+  **Grimorio** (`js/grimorio.js`): nuovo `spellListClassId` nei dati di
+  sottoclasse (qui: `'mago'`) letto da un helper `effectiveSpellClassId()`,
+  usato ovunque prima si leggeva `character().classId` per il "proprio"
+  elenco incantesimi — Glossario, titolo del Glossario (nome sottoclasse
+  invece che classe), default dei chip nel picker libero, pool del passo
+  guidato "Aggiorna incantesimi" del level-up (`js/levelup.js`).
+  `getMaxPrepared()`/`getMaxSlotLevel()` ora leggono prima la tabella di
+  sottoclasse (`sub.preparedByLevel`/`sub.slotLevelByLevel`), poi quella di
+  classe — con `|| []` di sicurezza che corregge anche un potenziale crash
+  latente per le classi non incantatrici (mai emerso prima perché il
+  Glossario di quelle classi non viene mai aperto).
+  **Level-up** (`js/levelup.js`): **bug pre-esistente scoperto e corretto**
+  — `computeDraft()` non riportava mai la sottoclasse appena scelta nel
+  "draft" usato per calcolare i guadagni del passo 1 e per decidere se
+  mostrare il passo 2 "Aggiorna incantesimi": qualunque guadagno legato
+  ALLA sottoclasse scelta in QUEL livello (non solo il nuovo caso, anche
+  risorse subclass-scoped già esistenti come Luce Guaritrice del Warlock)
+  restava invisibile nell'anteprima. Corretto assegnando
+  `draft.subclassId = choice.subclassId || autoSubclassId || character.subclassId`
+  quando il livello lo richiede — stessa formula già in uso altrove nel
+  file (`effectiveSubclassId`). Aggiunto anche `preparedMaxAt(livello,
+  sottoclasse)`, usato sia nell'anteprima sia al momento del salvataggio
+  (con lo snapshot `subclassIdBefore`, preso PRIMA che `ch.subclassId`
+  venga mutato dal salvataggio stesso, altrimenti "prima" leggerebbe già il
+  valore nuovo).
+  **Dati** (`js/manual-55.js`): Cavaliere Occulto (Legame d'Arme, Magia da
+  Guerra, Colpo Occulto, Carica Arcana, Magia da Guerra Migliorata) e
+  Truffatore Arcano (Mano Magica sempre pronta via `spellsByLevel`,
+  Prestidigitazione con Mano Magica, Imboscata Magica, Truffatore
+  Versatile, Ladro di Incantesimi). Nessun tag `'guerriero'`/`'ladro'` da
+  aggiungere agli incantesimi Mago: il pool arriva da `spellListClassId`,
+  non da tag sugli incantesimi — solo Mano Magica ha ricevuto il tag
+  `'ladro'` in più (per il grant fisso di sottoclasse). Manuale `version`
+  53→54, cache busting `?v=236`→`?v=237`.
+  **Verificato**: harness isolato (CD/attacco/slot per Cavaliere Occulto
+  L3/7/13 e Truffatore Arcano L3, esatti a mano; non-regressione su
+  Campione e Assassino, `spellAbility` ripiega su CAR/slots vuoti come
+  prima). Controprova nell'app reale: Grimorio di un Cavaliere Occulto L7
+  mostra CD 14/Attacco +6/Intelligenza/0-5 preparati, 2 slot-card (4/4 e
+  2/2) coi numeri giusti; Glossario intitolato "Glossario del Cavaliere
+  Occulto" con la lista di 1°/2° livello del Mago, tocco che prepara/
+  rimuove col tetto a 5 rispettato. **Level-up end-to-end**: un Guerriero
+  2→3 che sceglie Cavaliere Occulto mostra ora il passo 2 "Aggiorna
+  incantesimi" (prima del fix a `computeDraft()` non compariva affatto),
+  testo "slot (— → 2) e preparabili da 0 a 3" corretto, selezione di 3
+  incantesimi e salvataggio persistito giusto in `grimoire.prepared`. Non-
+  regressione su un Chierico 4→5 (nessuna scelta di sottoclasse a quel
+  livello): "Slot Incantesimi 4/3 → 4/3/2" e "Incantesimi Preparati 7 → 9"
+  invariati. Console pulita in ogni prova.
+  **Non ancora committato/deployato a fine sessione.**
+  Restano ora solo 2 sottoclassi rimandate, entrambe problemi isolati:
+  Circolo della Terra (Druido, picker di terreno cambiabile a riposo lungo)
+  e Tradizione dell'Abiurazione (Mago, pool di PF con assorbimento/
+  rigenerazione).
 - **Nota di sessione (2026-08-16): ripresa la Fase 5, risolto il problema
   architetturale "CA su due caratteristiche"** — FATTO. Le due sottoclassi
   rimandate per questo motivo (Collegio della Danza del Bardo, Stregoneria
