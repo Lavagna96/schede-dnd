@@ -386,7 +386,12 @@
       ? Math.max(initBonusDef.min || 0, mods[initBonusDef.ability]) : 0;
     var initiative = mods.DES + modSum(ch, 'iniziativa') + initBonus;
 
-    var spellAbility = klass.spellAbility || 'CAR';
+    /* Caratteristica/tipo da incantatore: normalmente di classe, ma il
+       "terzo" incantatore (Cavaliere Occulto/Truffatore Arcano, Fase 5) li
+       ha solo a livello di sottoclasse — la classe base resta 'none' per chi
+       non la sceglie. Stesso principio di unarmoredDefense più sopra. */
+    var spellAbility = subclass.spellAbility || klass.spellAbility || 'CAR';
+    var effCasterType = subclass.casterType || klass.casterType;
     var spellDc = 8 + pb + mods[spellAbility] + modSum(ch, 'cd-inc');
     var spellAttack = pb + mods[spellAbility] + modSum(ch, 'att-inc');
 
@@ -428,7 +433,7 @@
        indice valorizzato) così le card sl1..sl9 pertinenti restano
        generiche: resta vuoto agli indici non usati, `forEach` li salta. */
     var slots;
-    if (klass.casterType === 'pact') {
+    if (effCasterType === 'pact') {
       var pactCount = (manual.slotTables.pactSlots || [])[ch.level] || 0;
       var pactLevel = (manual.slotTables.pactSlotLevel || [])[ch.level] || 0;
       slots = [];
@@ -436,7 +441,7 @@
         slots[pactLevel - 1] = pactCount;
       }
     } else {
-      slots = (manual.slotTables[klass.casterType] || [])[ch.level] || [];
+      slots = (manual.slotTables[effCasterType] || [])[ch.level] || [];
     }
 
     // Tipo di danno del Soffio/Resistenza: dall'ascendenza draconica scelta
@@ -594,6 +599,7 @@
       hasSteed: hasSteed,
       spellDc: spellDc,
       spellAttack: spellAttack,
+      spellAbility: spellAbility,
       spellAbilityModText: fmt(mods[spellAbility]),
       poolMax: poolMax,
       slots: slots,
