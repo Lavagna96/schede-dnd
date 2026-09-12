@@ -117,6 +117,20 @@
     return out;
   }
 
+  // Circolo della Terra (Druido): gli incantesimi sempre preparati dipendono
+  // dal terreno scelto dal giocatore (character.circleLandId, cambiabile a
+  // ogni riposo lungo — js/edit-sheet.js), non da una tabella fissa come le
+  // altre sottoclassi. `landSpellsByLevel` sostituisce `spellsByLevel` quando
+  // presente; senza un terreno ancora scelto, nessun incantesimo fisso (come
+  // da manuale: la scelta è ciò che li sblocca).
+  function effectiveSubSpellsByLevel(sub) {
+    if (sub && sub.landSpellsByLevel) {
+      return sub.landSpellsByLevel[character().circleLandId] || null;
+    }
+
+    return sub && sub.spellsByLevel;
+  }
+
   function getFixedIds() {
     var ch = character();
     var klass = getManualClass();
@@ -126,7 +140,7 @@
     var sub = (klass.subclasses || {})[ch.subclassId] || null;
     var grim = window.AppStorage.getState().grimoire || {};
     var ids = spellsFromTable(klass.spellsByLevel, ch.level)
-      .concat(spellsFromTable(sub && sub.spellsByLevel, ch.level))
+      .concat(spellsFromTable(effectiveSubSpellsByLevel(sub), ch.level))
       .concat(grim.cantrips || [])
       // `always`: incantesimi sempre pronti per via di un talento (Iniziato
       // alla Magia), che non contano fra quelli preparabili.
@@ -152,7 +166,7 @@
     var sub = (klass.subclasses || {})[ch.subclassId] || null;
     var grim = window.AppStorage.getState().grimoire || {};
     var ids = spellsFromTable(klass.spellsByLevel, ch.level)
-      .concat(spellsFromTable(sub && sub.spellsByLevel, ch.level))
+      .concat(spellsFromTable(effectiveSubSpellsByLevel(sub), ch.level))
       .concat(grim.always || []);
 
     return ids.filter(function (id, i) { return ids.indexOf(id) === i; });

@@ -13,7 +13,7 @@
  * quando `version` locale è più nuova di quella remota.
  */
 window.MANUAL_55 = {
-  version: 54,
+  version: 55,
 
   slotTables: {
     /* slot per livello di classe: array di slot per livello incantesimo 1..9 */
@@ -748,17 +748,82 @@ window.MANUAL_55 = {
           { name: 'Arcidruido', desc: 'La vitalità della natura ti scorre dentro. Forma Selvatica Perenne: quando tiri Iniziativa senza usi di Forma Selvatica, ne recuperi uno. Mago della Natura: puoi convertire usi di Forma Selvatica in uno slot incantesimo (senza azione), con ogni uso che vale 2 livelli di slot; una sola volta prima di un riposo lungo. Longevità: invecchi molto più lentamente (un anno ogni dieci che passano).' }
         ]
       },
-      /* Circoli del Druido: Luna, Mare e Stelle fatti (PHB p.85-88) — tutti e
-         tre solo incantesimi sempre preparati + abilità descrittive ("X
-         volte pari al modificatore di Saggezza"), nessuna risorsa nuova
-         oltre a Forma Selvatica già tracciata, stesso trattamento dato ai
-         Domini del Chierico. Circolo della Terra resta fuori: richiede una
-         scelta di tipo di terreno (arido/polare/temperato/tropicale) da
-         poter cambiare a ogni riposo lungo, con incantesimi diversi per
-         tipo — un picker che non esiste ancora nell'app, da discutere con
-         Andrea prima di modellarlo (stessa natura di problema del Cavaliere
-         Occulto/Truffatore Arcano rimandati). */
+      /* Circoli del Druido (PHB p.83-89): Luna, Mare e Stelle sono solo
+         incantesimi sempre preparati + abilità descrittive ("X volte pari al
+         modificatore di Saggezza"), nessuna risorsa nuova oltre a Forma
+         Selvatica già tracciata, stesso trattamento dato ai Domini del
+         Chierico. Circolo della Terra (sotto) è diverso: la lista di
+         incantesimi sempre preparati dipende da un terzo dato scelto dal
+         giocatore (`character.circleLandId`, tipo di terreno), non fissa come
+         nelle altre sottoclassi — vedi `terra.landSpellsByLevel` e l'helper
+         `effectiveSubSpellsByLevel` in js/grimorio.js che lo sostituisce a
+         `spellsByLevel` quando presente. */
       subclasses: {
+        terra: {
+          name: 'Circolo della Terra',
+          tenets: 'Custodisce la saggezza antica della natura, legandosi a un tipo di terreno che può cambiare a ogni riposo lungo.',
+          /* Sostituisce `spellsByLevel` (letto da js/grimorio.js tramite
+             effectiveSubSpellsByLevel): una tabella di incantesimi sempre
+             preparati per ciascuno dei 4 terreni (PHB p.83-84), selezionata
+             in base a `character.circleLandId`. */
+          landSpellsByLevel: {
+            arido: {
+              3: [
+                { id: 'sfocatura', name: 'Sfocatura' },
+                { id: 'mani-ardenti', name: 'Mani Ardenti' },
+                { id: 'dardo-di-fuoco', name: 'Dardo di Fuoco' }
+              ],
+              5: [{ id: 'palla-di-fuoco', name: 'Palla di Fuoco' }],
+              7: [{ id: 'piaga', name: 'Piaga' }],
+              9: [{ id: 'muro-di-pietra', name: 'Muro di Pietra' }]
+            },
+            polare: {
+              3: [
+                { id: 'nube-di-nebbia', name: 'Nube di Nebbia' },
+                { id: 'immobilizzare-persona', name: 'Immobilizzare Persona' },
+                { id: 'raggio-di-gelo', name: 'Raggio di Gelo' }
+              ],
+              5: [{ id: 'tempesta-di-nevischio', name: 'Tempesta di Nevischio' }],
+              7: [{ id: 'tempesta-di-ghiaccio', name: 'Tempesta di Ghiaccio' }],
+              9: [{ id: 'cono-di-freddo', name: 'Cono di Freddo' }]
+            },
+            temperato: {
+              3: [
+                { id: 'passo-nella-nebbia', name: 'Passo nella Nebbia' },
+                { id: 'presa-elettrizzante', name: 'Presa Elettrizzante' },
+                { id: 'sonno', name: 'Sonno' }
+              ],
+              5: [{ id: 'fulmine', name: 'Fulmine' }],
+              7: [{ id: 'liberta-di-movimento', name: 'Libertà di Movimento' }],
+              9: [{ id: 'incedere-tra-gli-alberi', name: 'Incedere tra gli Alberi' }]
+            },
+            tropicale: {
+              3: [
+                { id: 'spruzzo-acido', name: 'Spruzzo Acido' },
+                { id: 'raggio-malato', name: 'Raggio Malato' },
+                { id: 'ragnatela', name: 'Ragnatela' }
+              ],
+              5: [{ id: 'nube-fetida', name: 'Nube Fetida' }],
+              7: [{ id: 'metamorfosi', name: 'Metamorfosi' }],
+              9: [{ id: 'piaga-di-insetti', name: 'Piaga di Insetti' }]
+            }
+          },
+          features: {
+            3: [
+              { name: 'Incantesimi del Circolo', desc: 'Al termine di un riposo lungo scegli un tipo di terreno (arido, polare, temperato o tropicale): hai sempre preparati gli incantesimi di quel terreno fino al tuo livello da druido, secondo la sua tabella dedicata. Terreno attuale: {{land_name}}.' },
+              { name: 'Soccorso della Terra', desc: 'Come azione magica, spendi un uso di Forma Selvatica e scegli un punto entro 18 m: in una Sfera di 3 m centrata lì, una creatura a tua scelta fa un TS Costituzione o subisce 2d6 danni Necrotici (metà se supera), e un\'altra creatura a tua scelta nella Sfera recupera 2d6 PF. Il dado sale a 3d6 al 10° livello e 4d6 al 14°.' }
+            ],
+            6: [
+              { name: 'Recupero Naturale', desc: 'Una volta per riposo lungo puoi lanciare gratuitamente uno dei tuoi incantesimi del Circolo di 1° livello o superiore senza spendere uno slot. Inoltre, al termine di un riposo breve, puoi recuperare slot incantesimo con livello totale pari o inferiore alla metà del tuo livello da druido (arrotondato per eccesso, nessuno di 6° livello o superiore); puoi farlo una sola volta prima di ogni riposo lungo.' }
+            ],
+            10: [
+              { name: 'Baluardo della Natura', desc: 'Sei immune alla condizione Avvelenato e hai resistenza al tipo di danno legato al tuo terreno attuale ({{land_name}}: {{land_resist}}).' }
+            ],
+            14: [
+              { name: 'Santuario della Natura', desc: 'Come azione magica, spendi un uso di Forma Selvatica e crea per 1 minuto (finché non sei Incapacitato, muori o lo dissolvi prima) un Cubo di 4,5 m di alberi e rampicanti spettrali entro 36 m: tu e i tuoi alleati in quell\'area avete Copertura Parziale e la resistenza attuale di Baluardo della Natura. Come azione bonus puoi spostare il Cubo fino a 18 m.' }
+            ]
+          }
+        },
         luna: {
           name: 'Circolo della Luna',
           tenets: 'Trae la sua magia dalla luna per trasformarsi e vegliare sui luoghi selvaggi.',
@@ -2828,6 +2893,20 @@ window.MANUAL_55 = {
     }
   },
 
+  /* Terreni del Circolo della Terra (PHB 2024 p.83-84): scelto dal Druido
+     Circolo della Terra a ogni riposo lungo (character.circleLandId),
+     determina sia gli incantesimi sempre preparati (druido.subclasses.terra.
+     landSpellsByLevel) sia il tipo di danno di Baluardo della Natura al 10°
+     livello (tabella "Nature's Ward"). Vedi js/traits.js ({{land_name}}/
+     {{land_resist}}), js/stats.js (chip "Terra") e js/edit-sheet.js
+     (picker di modifica). */
+  circleLands: {
+    arido: { name: 'Arido', resist: 'Fuoco' },
+    polare: { name: 'Polare', resist: 'Freddo' },
+    temperato: { name: 'Temperato', resist: 'Fulmine' },
+    tropicale: { name: 'Tropicale', resist: 'Veleno' }
+  },
+
   /* Ascendenze draconiche (PHB 2024, tabella "Draconic Ancestors" p.186-187):
      scelta al livello 1 dal Dragonide (Blocco 5.B, step Specie), determina il
      tipo di danno di Soffio e Resistenza al Danno — vedi js/create.js
@@ -3656,7 +3735,7 @@ window.MANUAL_55 = {
       meta: 'Azione · Sé · 1 min · V, S',
       desc: 'Tre duplicati illusori ti circondano, muovendosi e imitandoti. Se subisci un colpo, tiri 1d6 per ogni duplicato rimasto: con un 3+ un duplicato viene colpito al posto tuo e distrutto. Finisce quando tutti e tre sono distrutti; non inganna le creature Accecate o dotate di Vista Cieca o Vista Vera.' },
     { id: 'passo-nella-nebbia', name: 'Passo nella Nebbia', level: 2, school: 'Convocazione',
-      classes: ['stregone', 'warlock', 'mago'],
+      classes: ['stregone', 'warlock', 'mago', 'druido'],
       meta: 'Azione bonus · Sé · Istantaneo · V',
       desc: 'Avvolto da nebbia argentea, ti teletrasporti fino a 9 m in uno spazio libero che riesci a vedere.' },
     { id: 'raggio-di-indebolimento', name: 'Raggio di Indebolimento', level: 2, school: 'Negromanzia',
@@ -3919,7 +3998,7 @@ window.MANUAL_55 = {
       meta: 'Azione · 18 m · 10 min CONC · V, S, M (un fiocco di lana)',
       desc: 'Crei l\'immagine puramente visiva (senza suono) di un oggetto, creatura o fenomeno fino a 4,5 m di lato, entro gittata. Puoi spostarla con un\'azione magica alterandone l\'aspetto in movimento; l\'interazione fisica o una prova di Investigare contro la tua CD la smaschera.' },
     { id: 'sonno', name: 'Sonno', level: 1, school: 'Incantamento',
-      classes: ['bardo', 'stregone', 'mago', 'warlock'],
+      classes: ['bardo', 'stregone', 'mago', 'warlock', 'druido'],
       meta: 'Azione · 18 m · 1 min CONC · V, S, M (un pizzico di sabbia o petali di rosa)',
       desc: 'Le creature scelte in una sfera di 1,5 m entro gittata fanno TS Saggezza o sono Incapaci di Agire fino alla fine del loro prossimo turno, quando ripetono il TS: se falliscono di nuovo sono Incoscienti finché dura. Termina per chi subisce danno o viene scosso. Chi non dorme mai o è immune a Sfinimento supera automaticamente.' },
     { id: 'onda-tonante', name: 'Onda Tonante', level: 1, school: 'Evocazione',
@@ -4005,7 +4084,7 @@ window.MANUAL_55 = {
       meta: 'Azione · 3 m · 10 minuti · V, S, M (incenso in combustione)',
       desc: 'Doni un simulacro di vita a un cadavere entro gittata, che può rispondere alle tue domande (deve avere una bocca; fallisce se era Non Morto in vita, o se già bersaglio di questo incantesimo negli ultimi 10 giorni).' },
     { id: 'nube-fetida', name: 'Nube Fetida', level: 3, school: 'Convocazione',
-      classes: ['bardo', 'stregone', 'mago', 'warlock'],
+      classes: ['bardo', 'stregone', 'mago', 'warlock', 'druido'],
       meta: 'Azione · 27 m · 1 min CONC · V, S, M (un uovo marcio)',
       desc: 'Una sfera di 6 m di raggio di gas nauseante e Fortemente Oscurante appare entro gittata, finché dura o finché un vento forte non la disperde. Chi inizia il turno nell\'area fa TS Costituzione o è Avvelenato fino alla fine del turno corrente (non può compiere azioni né azioni bonus mentre lo è).' },
 
@@ -4488,7 +4567,7 @@ window.MANUAL_55 = {
 
     /* ===== Stregone — incantesimi mancanti ===== */
     { id: 'spruzzo-acido', name: 'Spruzzo Acido', level: 0, school: 'Evocazione',
-      classes: ['stregone', 'mago'],
+      classes: ['stregone', 'mago', 'druido'],
       meta: 'Azione · 18 m · Istantaneo · V, S',
       desc: 'Crei una bolla acida in un punto entro gittata, che esplode in una Sfera di 1,5 m di raggio: le creature nella Sfera fanno TS Destrezza o subiscono 1d6 acido. Il danno sale a 2d6 al 5° livello, 3d6 all\'11°, 4d6 al 17°.' },
     { id: 'dardo-di-fuoco', name: 'Dardo di Fuoco', level: 0, school: 'Evocazione',
@@ -4504,7 +4583,7 @@ window.MANUAL_55 = {
       meta: 'Azione · 18 m · Istantaneo · V, S',
       desc: 'Un raggio gelido color bianco-blu sfreccia verso una creatura entro gittata: attacco con incantesimo a distanza, 1d8 freddo se colpisci e la sua velocità si riduce di 3 m fino al tuo prossimo turno. Il danno sale a 2d8 al 5° livello, 3d8 all\'11°, 4d8 al 17°.' },
     { id: 'presa-elettrizzante', name: 'Presa Elettrizzante', level: 0, school: 'Evocazione',
-      classes: ['stregone', 'mago'],
+      classes: ['stregone', 'mago', 'druido'],
       meta: 'Azione · Tocco · Istantaneo · V, S',
       desc: 'Un fulmine scaturisce da te verso una creatura che tenti di toccare: attacco con incantesimo in mischia, 1d8 fulmine se colpisci e il bersaglio non può fare Attacchi di Opportunità fino al tuo prossimo turno. Il danno sale a 2d8 al 5° livello, 3d8 all\'11°, 4d8 al 17°.' },
     { id: 'scoppio-stregonesco', name: 'Scoppio Stregonesco', level: 0, school: 'Evocazione',
@@ -4552,7 +4631,7 @@ window.MANUAL_55 = {
       meta: 'Azione bonus · Sé · Istantaneo · V, S',
       desc: 'Attingi alla tua forza vitale per guarirti: tiri uno o due Dadi Vita non spesi e recuperi PF pari al totale più il modificatore da incantatore; quei dadi vengono spesi. +1 Dado Vita utilizzabile per ogni slot oltre il 2°.' },
     { id: 'sfocatura', name: 'Sfocatura', level: 2, school: 'Illusione',
-      classes: ['stregone', 'mago', 'warlock'],
+      classes: ['stregone', 'mago', 'warlock', 'druido'],
       meta: 'Azione · Sé · 1 min CONC · V',
       desc: 'Il tuo corpo diventa sfocato: finché dura, ogni creatura ha svantaggio agli attacchi contro di te, a meno che non ti percepisca con Scurovisione Cieca o Vista Vera.' },
     { id: 'soffio-di-drago', name: 'Soffio di Drago', level: 2, school: 'Trasmutazione',
@@ -4568,7 +4647,7 @@ window.MANUAL_55 = {
       meta: 'Azione · 36 m · Istantaneo · V, S',
       desc: 'Scagli tre raggi fiammeggianti contro uno o più bersagli entro gittata: attacco con incantesimo a distanza per ciascuno, 2d6 fuoco se colpisci. +1 raggio per ogni slot oltre il 2°.' },
     { id: 'ragnatela', name: 'Ragnatela', level: 2, school: 'Convocazione',
-      classes: ['stregone', 'mago'],
+      classes: ['stregone', 'mago', 'druido'],
       meta: 'Azione · 18 m · 1 ora CONC · V, S, M (un po\' di ragnatela)',
       desc: 'Crei una massa di ragnatela appiccicosa che riempie un Cubo di 6 m entro gittata (Terreno Difficile, leggermente oscurato); se non è ancorata a superfici solide collassa e l\'incantesimo finisce al tuo prossimo turno. Chi entra o inizia il turno nella ragnatela fa TS Destrezza o resta Trattenuto (liberabile con una prova di Forza (Atletica) contro la tua CD). È infiammabile: un cubo di 1,5 m esposto al fuoco brucia in un round, infliggendo 2d4 fuoco a chi vi inizia il turno.' },
     { id: 'sfarfallio', name: 'Sfarfallio', level: 3, school: 'Trasmutazione',
@@ -4576,7 +4655,7 @@ window.MANUAL_55 = {
       meta: 'Azione · Sé · 1 minuto · V, S',
       desc: 'Tiri 1d6 a fine di ogni tuo turno per la durata: con 4-6 svanisci dal piano e appari sul Piano Etereo (finché non torni o l\'incantesimo termina), percependo il tuo piano d\'origine in tonalità di grigio entro 18 m; puoi interagire solo con creature sull\'Etereo. Torni all\'inizio del turno successivo o alla fine dell\'incantesimo, in uno spazio libero entro 3 m da dove eri.' },
     { id: 'palla-di-fuoco', name: 'Palla di Fuoco', level: 3, school: 'Evocazione',
-      classes: ['stregone', 'mago', 'chierico', 'warlock'],
+      classes: ['stregone', 'mago', 'chierico', 'warlock', 'druido'],
       meta: 'Azione · 45 m · Istantaneo · V, S, M (una pallina di guano di pipistrello e zolfo)',
       desc: 'Un lampo scocca da te fino a un punto entro gittata ed esplode in una Sfera di 6 m di raggio: le creature fanno TS Destrezza o subiscono 8d6 fuoco (metà se superano); gli oggetti infiammabili non indossati prendono fuoco. +1d6 per ogni slot oltre il 3°.' },
     { id: 'accelerare', name: 'Accelerare', level: 3, school: 'Trasmutazione',
@@ -4587,6 +4666,29 @@ window.MANUAL_55 = {
       classes: ['stregone', 'mago', 'druido'],
       meta: 'Azione · Sé · Istantaneo · V, S, M (un po\' di pelo e un\'asta di cristallo)',
       desc: 'Una scarica fulminea forma una Linea di 30 m per 1,5 m nella direzione che scegli: le creature nella Linea fanno TS Destrezza o subiscono 8d6 fulmine (metà se superano). +1d6 per ogni slot oltre il 3°.' },
+
+    /* ===== Circolo della Terra (Druido) — incantesimi mancanti (PHB p.83-84) ===== */
+    { id: 'immobilizzare-persona', name: 'Immobilizzare Persona', level: 2, school: 'Incantamento',
+      classes: ['bardo', 'chierico', 'druido', 'stregone', 'warlock', 'mago'],
+      meta: 'Azione · 18 m · 1 min CONC · V, S, M (un pezzo di ferro dritto)',
+      desc: 'Scegli un Umanoide che vedi entro gittata: fa un TS Saggezza o ha la condizione Paralizzato per la durata, ripetendo il TS alla fine di ogni suo turno. Con uno slot superiore al 2° puoi bersagliare un Umanoide aggiuntivo per ogni livello in più.' },
+    { id: 'cono-di-freddo', name: 'Cono di Freddo', level: 5, school: 'Evocazione',
+      classes: ['druido', 'stregone', 'mago'],
+      meta: 'Azione · Sé (Cono 18 m) · Istantaneo · V, S, M (un piccolo cristallo o cono di vetro)',
+      desc: 'Scagli un soffio gelido in un Cono di 18 m: le creature al suo interno fanno un TS Costituzione o subiscono 8d8 danni Freddo (metà se superano). Chi muore per questo danno diventa una statua di ghiaccio finché non si scioglie. Con uno slot superiore al 5° il danno sale di 1d8 per livello in più.' },
+    { id: 'incedere-tra-gli-alberi', name: 'Incedere tra gli Alberi', level: 5, school: 'Convocazione',
+      classes: ['druido', 'ranger'],
+      meta: 'Azione · Sé · 1 min CONC · V, S',
+      desc: 'Puoi entrare in un albero vivo e uscirne all\'interno di un altro albero della stessa specie entro 150 m, di dimensioni almeno pari alla tua; entrare in un albero costa 1,5 m di movimento. Per la durata conosci la posizione di tutti gli altri alberi della stessa specie in quel raggio.' },
+    { id: 'raggio-malato', name: 'Raggio Malato', level: 1, school: 'Negromanzia',
+      classes: ['stregone', 'mago', 'druido'],
+      meta: 'Azione · 18 m · Istantaneo · V, S',
+      desc: 'Scagli un raggio verdastro contro una creatura entro gittata: attacco con incantesimo a distanza, 2d8 danni Veleno se colpisci e il bersaglio ha la condizione Avvelenato fino alla fine del tuo prossimo turno. Il danno sale di 1d8 per ogni slot oltre il 1°.' },
+    { id: 'metamorfosi', name: 'Metamorfosi', level: 4, school: 'Trasmutazione',
+      classes: ['bardo', 'druido', 'stregone', 'mago'],
+      meta: 'Azione · 18 m · 1 ora CONC · V, S, M (un bozzolo di bruco)',
+      desc: 'Scegli una creatura che vedi entro gittata: fa un TS Saggezza o si trasforma per la durata in una Bestia a tua scelta con GS pari o inferiore al suo (o al suo livello, se non ha un GS). Mantiene allineamento, personalità, tipo di creatura, PF e Dadi Vita, ma usa le altre statistiche della Bestia e ottiene PF temporanei pari ai PF di quella forma (l\'incantesimo finisce prima se li perde tutti); non può parlare né lanciare incantesimi, e il suo equipaggiamento si fonde nella nuova forma senza poterlo usare.' },
+
     { id: 'sfera-vetriolica', name: 'Sfera Vetriolica', level: 4, school: 'Evocazione',
       classes: ['stregone', 'mago'],
       meta: 'Azione · 45 m · Istantaneo · V, S, M (una goccia di bile)',

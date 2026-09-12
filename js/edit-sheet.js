@@ -679,6 +679,37 @@
     });
   }
 
+  /* ---------- Sheet: Terra del Circolo (Druido, Circolo della Terra) ----------
+     Diverso dagli altri sheet: nessun draft/Salva, la scelta si applica e
+     chiude subito al tocco (come i toggle di Grimorio/Risorse) invece di
+     passare da un pulsante Salva — qui c'è un solo campo, non serve
+     accumulare più modifiche prima di scrivere. Aperto da un chip in
+     Info/Comb (js/stats.js), non da un'icona fissa: niente riga in
+     bindTriggers, esportato a parte per la chiamata diretta. */
+  function buildCircleLandSheet() {
+    var ch = window.AppStorage.getState().character;
+    var lands = window.MANUAL_55.circleLands || {};
+    var order = ['arido', 'polare', 'temperato', 'tropicale'];
+
+    openSheet('Terra del Circolo');
+    bodyEl.appendChild(el('p', 'edit-hint', 'Decide gli incantesimi sempre preparati e la resistenza di Baluardo della Natura al 10° livello. Cambiabile a ogni riposo lungo.'));
+
+    var row = el('div', 'chip-row');
+    order.forEach(function (id) {
+      var land = lands[id] || { name: id };
+      var chip = el('button', 'chip' + (ch.circleLandId === id ? ' on' : ''), land.name);
+      chip.type = 'button';
+      chip.addEventListener('click', function () {
+        commit(function (character) {
+          character.circleLandId = id;
+        });
+        closeSheet();
+      });
+      row.appendChild(chip);
+    });
+    bodyEl.appendChild(row);
+  }
+
   /* ---------- bind ---------- */
 
   function bindTriggers() {
@@ -721,6 +752,7 @@
   }
 
   window.AppEditSheet = {
-    init: init
+    init: init,
+    openCircleLand: buildCircleLandSheet
   };
 })();

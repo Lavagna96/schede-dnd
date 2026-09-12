@@ -552,6 +552,23 @@
        Immondi/Non Morti, gratuita 1/riposo lungo) — ora un solo chip qui, con
        tutto quel contenuto raccolto nella descrizione del bottom sheet invece
        di essere spalmato su più righe. */
+    /* Terra del Circolo (Druido, Circolo della Terra): scelta cambiabile a
+       ogni riposo lungo, non fissa come le altre note qui — il chip apre
+       direttamente il picker invece della descrizione di sola lettura
+       (js/edit-sheet.js openCircleLand). */
+    if (ch.classId === 'druido' && view.subclassId === 'terra') {
+      var lands = window.MANUAL_55.circleLands || {};
+      var land = lands[ch.circleLandId];
+      chips.push({
+        label: 'Terra: ' + (land ? land.name : 'da scegliere'),
+        detail: 'tocca per cambiare',
+        onClick: function () {
+          if (window.AppEditSheet && window.AppEditSheet.openCircleLand) {
+            window.AppEditSheet.openCircleLand();
+          }
+        }
+      });
+    }
     if (ch.classId === 'paladino') {
       var punizioneDivina = null;
       (window.MANUAL_55.spells || []).forEach(function (s) {
@@ -585,7 +602,11 @@
       chip.appendChild(nameSpan);
       chip.appendChild(detailSpan);
       chip.addEventListener('click', function () {
-        if (it.desc && window.AppBottomSheet) {
+        // Terra del Circolo (Druido): invece della descrizione di sola
+        // lettura, apre il picker per cambiare terreno (js/edit-sheet.js).
+        if (it.onClick) {
+          it.onClick();
+        } else if (it.desc && window.AppBottomSheet) {
           window.AppBottomSheet.open(it.title, '<p>' + escapeHtml(it.desc) + '</p>');
         }
       });

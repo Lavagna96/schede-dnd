@@ -77,6 +77,7 @@
     goliathGiftId: null,
     tieflingLegacyId: null,
     gnomeLineageId: null,
+    circleLandId: null,
     avatar: '✦',
     abilities: { FOR: 10, DES: 10, COS: 10, INT: 10, SAG: 10, CAR: 10 },
     profSaves: [],

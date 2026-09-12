@@ -67,6 +67,7 @@
     var goliathGift = (manual.goliathGifts || {})[character.goliathGiftId];
     var tieflingLegacy = (manual.tieflingLegacies || {})[character.tieflingLegacyId];
     var gnomeLineage = (manual.gnomeLineages || {})[character.gnomeLineageId];
+    var circleLand = (manual.circleLands || {})[character.circleLandId];
 
     var gnomeExtra = '';
     if (gnomeLineage && character.gnomeLineageId === 'boschi') {
@@ -103,7 +104,10 @@
 
       gnome_lineage: gnomeLineage ? gnomeLineage.name : 'non scelto',
       gnome_cantrip: gnomeLineage ? gnomeLineage.cantrip : 'nessuno',
-      gnome_extra: gnomeExtra
+      gnome_extra: gnomeExtra,
+
+      land_name: circleLand ? circleLand.name : 'non scelto',
+      land_resist: circleLand ? circleLand.resist : 'del terreno scelto'
     };
   }
 
