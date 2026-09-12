@@ -10,6 +10,74 @@
 ## Dove siamo
 
 - **Ultimo aggiornamento:** 2026-09-12
+- **Nota di sessione (2026-09-12, quarta parte): bonus di background
+  spostato dentro la tabella Punteggi.** Richiesta diretta di Andrea: il
+  riepilogo degli aumenti di background (+2/+1 o +1/+1/+1) stava in un
+  blocco a parte sopra la tabella, poco visibile/capibile.
+  **3 alternative con preview** (mockup HTML con lo stile reale dell'app):
+  A — riga "finale" sotto lo stepper solo quando c'è un bonus, B — badge
+  dorato accanto al nome + modificatore corretto, C — colonna "Finale"
+  dedicata con il punteggio grande a destra. **Scelta la B.**
+  `js/create.js`: nuovo helper condiviso `buildStatLabel(k, bonusMap)` (badge
+  "+N" accanto al nome, spazio riservato anche se vuoto — `is-empty` — così
+  le righe restano allineate), usato dai 3 metodi di generazione punteggi
+  (point-buy/array/manuale). Punteggio e modificatore mostrati in ogni riga
+  sono ora quelli REALI (base + bonus di background), non più solo la base:
+  prima il modificatore sotto lo stepper era "sbagliato" finché non si
+  arrivava al riepilogo sopra per fare la somma a mente. Rimosso il vecchio
+  blocco `.create-bg-recap` (e la variabile `bgRecapRefresh` che lo
+  riscriveva, ormai morta) da `renderPunteggi()`, pulizia CSS in
+  `create.css`. Nuove regole in `edit-sheet.css`
+  (`.edit-stat-label-wrap`/`.edit-stat-bonus-badge`).
+  **Verificato in locale**: wizard aperto da console
+  (`window.AppCreate.open()`, bypassando il login) fino al passo Punteggi
+  con un Mago + background Accolito (+2 Intelligenza, +1 Saggezza) — badge
+  corretti su tutti e 3 i metodi, Intelligenza 15 base → mostra 17 (+3),
+  Saggezza 14 base → mostra 15 (+2), tetto del point-buy rispettato (il "+"
+  si disabilita comunque alla base 15, pur mostrando il finale 17); nessun
+  errore in console riconducibile alla modifica. Cache busting
+  `?v=240`→`?v=241`.
+  **Non ancora committato/deployato a fine sessione.**
+- **Nota di sessione (2026-09-12, terza parte): rinominato il progetto e
+  aggiunto l'accesso con Google.** Due richieste dirette di Andrea, fuori
+  dalle fasi della roadmap.
+  **Rinomina**: repo GitHub `scheda_d-d_paladino` → **`schede-dnd`**
+  (rinominato da Andrea in console), link live ora
+  **https://lavagna96.github.io/schede-dnd/**. Il nome visibile dell'app
+  era già generico ("Schede & Imprese", da tempo), mancava solo l'URL/repo
+  e la descrizione del manifest PWA (ancora "Paladino Dragonide Oro,
+  Giuramento di Devozione" — genericizzata). Seguito completo: cartella
+  locale rinominata, remote git aggiornato, riferimenti in `CLAUDE.md`
+  (titolo + URL Pages) aggiornati. **Attenzione**: GitHub reindirizza da
+  solo le operazioni git (clone/push) sul repo rinominato, ma **non**
+  l'URL delle GitHub Pages — il vecchio link
+  `lavagna96.github.io/scheda_d-d_paladino/` ora dà 404. Se l'app era
+  installata da home screen su iPhone con quel link, va reinstallata dal
+  nuovo URL. Verificato con `curl`: nuovo URL 200 e serve `?v=240`, vecchio
+  URL 404.
+  **Login con Google**: bottone "Accedi con Google" nella login page.
+  3 alternative di posizionamento mostrate con preview (A — sotto "Entra"
+  con divisore, B — Google-first in cima, C — link discreto in fondo);
+  **scelta la A**. `js/cloud.js`: `signInWithPopup` + `GoogleAuthProvider`
+  (Firebase Auth), più mappatura dei nuovi codici di errore (provider non
+  attivo, popup bloccato/chiuso, dominio non autorizzato, account già
+  esistente con altro metodo). `onAuthStateChanged` — già cablato per
+  email/password — gestisce l'ingresso in app allo stesso modo qualunque
+  sia il provider: zero logica nuova per dashboard/sync. Provider Google
+  abilitato da Andrea in Firebase Console (Authentication → Sign-in
+  method). Verificato in locale con lo stato simulato via classe `auth-out`
+  sul body (nessun logout reale): bottone visibile, icona dimensionata
+  correttamente dopo un fix di cache busting, click apre il popup senza
+  errori console; **il completamento reale del flusso OAuth (login con un
+  vero account Google) va provato da Andrea di persona** — l'assistente non
+  inserisce mai credenziali per policy.
+  **Password dimenticata**: il flusso esisteva già da prima (bottone
+  "Password dimenticata?" → `sendPasswordResetEmail`), non toccato in
+  questa sessione — **da confermare con un invio di prova reale**, non
+  ancora fatto.
+  Cache busting `?v=239`→`?v=240`. **Committato e deployato**: push su
+  `main` (repo rinominato), run "pages build and deployment" verde, sito
+  live verificato.
 - **Nota di sessione (2026-09-12, seconda parte): Tradizione dell'Abiurazione
   (Mago) modellata — con questa, TUTTE LE SOTTOCLASSI DEL PHB 2024 SONO
   COMPLETE (11 classi × 4 sottoclassi ciascuna).** Il Baluardo Arcano — lo
