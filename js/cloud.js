@@ -10,7 +10,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  createUserWithEmailAndPassword, sendPasswordResetEmail, signOut,
+  GoogleAuthProvider, signInWithPopup
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   initializeFirestore, persistentLocalCache, persistentSingleTabManager,
@@ -105,7 +106,11 @@ import {
       'auth/email-already-in-use': 'Esiste già un account con questa email.',
       'auth/weak-password': 'Password troppo corta (minimo 6 caratteri).',
       'auth/too-many-requests': 'Troppi tentativi: riprova tra qualche minuto.',
-      'auth/network-request-failed': 'Nessuna connessione: riprova quando sei online.'
+      'auth/network-request-failed': 'Nessuna connessione: riprova quando sei online.',
+      'auth/operation-not-allowed': 'Accesso con Google non ancora attivato per questo progetto.',
+      'auth/unauthorized-domain': 'Questo indirizzo non è autorizzato per l\'accesso con Google.',
+      'auth/popup-blocked': 'Il browser ha bloccato la finestra di accesso: consenti i popup e riprova.',
+      'auth/account-exists-with-different-credential': 'Esiste già un account con questa email ma un altro metodo di accesso.'
     };
 
     return map[code] || 'Errore: ' + (code || (err && err.message) || 'sconosciuto');
@@ -515,6 +520,24 @@ import {
       signInWithEmailAndPassword(auth, email.value.trim(), pass.value)
         .catch(function (err) { setLoginError(errorMessage(err)); });
     });
+
+    // Accesso con Google: onAuthStateChanged (già cablato per email/password)
+    // gestisce l'ingresso in app allo stesso modo, indipendentemente dal
+    // provider — nessuna logica in più da scrivere per dashboard/sync.
+    var googleBtn = document.getElementById('lg-google');
+    if (googleBtn) {
+      googleBtn.addEventListener('click', function () {
+        setLoginError('');
+        signInWithPopup(auth, new GoogleAuthProvider())
+          .catch(function (err) {
+            // L'utente ha semplicemente chiuso il popup: non è un errore da mostrare.
+            if (err && err.code === 'auth/popup-closed-by-user') {
+              return;
+            }
+            setLoginError(errorMessage(err));
+          });
+      });
+    }
 
     document.getElementById('lg-register').addEventListener('click', function () {
       setLoginError('');

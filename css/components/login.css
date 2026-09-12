@@ -133,6 +133,40 @@ body.auth-locked #global-fab {
   margin-top: 10px;
 }
 
+/* Divisore "oppure" fra il login email/password e quello Google (Step
+   auth-google): stessa idea grafica di .skill-group-line, qui centrata fra
+   due fili invece di uno solo dopo l'etichetta. */
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.login-btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.login-google-ic {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
 .login-link {
   display: block;
   width: 100%;

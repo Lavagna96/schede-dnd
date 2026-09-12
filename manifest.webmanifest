@@ -1,7 +1,7 @@
 {
   "name": "Schede & Imprese",
   "short_name": "Schede",
-  "description": "Scheda del personaggio - Paladino Dragonide Oro, Giuramento di Devozione",
+  "description": "Gestisci le schede dei tuoi personaggi di D&D: caratteristiche, incantesimi, oggetti e level-up guidato.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
