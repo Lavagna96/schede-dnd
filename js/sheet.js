@@ -216,6 +216,19 @@
     renderDeathSaves();
   }
 
+  /* Baluardo Arcano (Mago, Tradizione dell'Abiurazione): apre lo stesso
+     modale PF Temporanei di sempre ma precompilato col massimo calcolato per
+     il personaggio (chip "Baluardo Arcano" in js/stats.js) — un tap in meno
+     che digitarlo a mano, nessuna barra/pool nuova. */
+  function openTempHpPrefilled(n) {
+    openHpModal('temp', 'hp');
+    var e = hpModalEls();
+    if (e.input) {
+      e.input.value = n;
+      updateHpModalPreview();
+    }
+  }
+
   function addTempHp(n) {
     var state = window.AppStorage.getState();
     state.pools.tempHp = (state.pools.tempHp || 0) + n;
@@ -684,6 +697,7 @@
     renderSteedHp: renderSteedHp,
     adjustPool: adjustPool,
     applyHpChange: applyHpChange,
-    renderResourceCard: renderUses
+    renderResourceCard: renderUses,
+    openTempHpPrefilled: openTempHpPrefilled
   };
 })();

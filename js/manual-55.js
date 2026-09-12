@@ -13,7 +13,7 @@
  * quando `version` locale è più nuova di quella remota.
  */
 window.MANUAL_55 = {
-  version: 55,
+  version: 56,
 
   slotTables: {
     /* slot per livello di classe: array di slot per livello incantesimo 1..9 */
@@ -1483,25 +1483,52 @@ window.MANUAL_55 = {
           { name: 'Incantesimi della Firma', desc: 'Scegli due incantesimi di 3° livello dal tuo libro come incantesimi della firma: li hai sempre preparati e puoi lanciare ciascuno una volta al 3° livello senza spendere uno slot (di nuovo dopo un riposo breve o lungo); per lanciarli a un livello superiore devi spendere uno slot.' }
         ]
       },
-      /* Sottoclassi del Mago: Divinazione, Evocazione e Illusione fatte (PHB
-         2024 p.171-174). Tutte e tre condividono lo stesso privilegio
-         d'apertura "Sapiente" (incantesimi extra scelti liberamente nel
-         libro dalla propria scuola, non una lista fissa come i giuramenti
-         del Paladino o Stregoneria Aberrante — niente `spellsByLevel`
-         qui, resta descrittivo). Rivalutato rispetto alla nota precedente:
-         "danno extra di Evocazione" (Evocazione Potenziata, +INT a un tiro
-         danni) e "cantrip bonus di Illusione" (Illusioni Migliorate) sono
-         in realtà descrizioni pure — l'app non calcola i danni degli
-         incantesimi come fa per gli attacchi con arma, quindi restano prosa
-         come ogni altro privilegio "aggiungi X al danno"/"impara un
-         trucchetto in più" già visto altrove. **Abiurazione resta fuori**:
-         il Baluardo Arcano è un vero e proprio scudo con PF propri (2×
-         livello + mod. Intelligenza) che assorbe danno al posto tuo e si
-         rigenera lanciando incantesimi di Abiurazione — un tipo di risorsa
-         mai visto (non "N usi", ma un pool di PF con logica di
-         assorbimento/rigenerazione), l'unico vero blocco di architettura
-         fra le quattro tradizioni. */
+      /* Sottoclassi del Mago (PHB 2024 p.171-174): tutte e quattro condividono
+         lo stesso privilegio d'apertura "Sapiente" (incantesimi extra scelti
+         liberamente nel libro dalla propria scuola, non una lista fissa come
+         i giuramenti del Paladino o Stregoneria Aberrante — niente
+         `spellsByLevel` per questo, resta descrittivo). "Danno extra di
+         Evocazione" e "cantrip bonus di Illusione" restano prosa pura per lo
+         stesso motivo di sempre: l'app non calcola i danni degli incantesimi
+         come fa per gli attacchi con arma.
+         Abiurazione (sotto) era rimasta fuori per il Baluardo Arcano — uno
+         scudo con PF propri (2×livello + mod. Intelligenza) che assorbe
+         danno al posto tuo e si rigenera lanciando incantesimi di
+         Abiurazione. Si è rivelato **non un tipo di risorsa nuovo**:
+         concettualmente è identico ai PF temporanei che l'app gestisce già
+         (barra dedicata sotto i PF, assorbe automaticamente prima di loro,
+         azzerati al riposo lungo — js/sheet.js `applyHpChange`/`longRest`).
+         Il chip "Baluardo Arcano" (js/stats.js) apre quel modale già
+         esistente precompilato col massimo calcolato, invece di una card
+         "pool" nuova come Imposizione delle Mani: zero motore nuovo, solo un
+         `{{ward_max}}` nel contesto dei segnaposto (js/traits.js) e
+         `AppSheet.openTempHpPrefilled` (js/sheet.js). */
       subclasses: {
+        abiurazione: {
+          name: 'Tradizione dell\'Abiurazione',
+          tenets: 'Studia la magia che blocca, bandisce e protegge: pone fine a effetti dannosi, respinge influenze malvagie e chiude portali verso altri piani.',
+          spellsByLevel: {
+            10: [
+              { id: 'contro-incantesimo', name: 'Contro Incantesimo' },
+              { id: 'dissolvi-magie', name: 'Dissolvi Magie' }
+            ]
+          },
+          features: {
+            3: [
+              { name: 'Sapiente dell\'Abiurazione', desc: 'Scegli due incantesimi da mago della scuola di Abiurazione, non superiori al 2° livello, e aggiungili gratis al tuo libro degli incantesimi. Inoltre, ogni volta che accedi a un nuovo livello di slot in questa classe, puoi aggiungere gratis al libro un altro incantesimo da mago della scuola di Abiurazione di quel livello o inferiore.' },
+              { name: 'Baluardo Arcano', desc: 'Quando lanci un incantesimo di Abiurazione con uno slot, puoi creare un baluardo magico su te stesso che dura fino al riposo lungo (una sola volta, finché non riposi): ha PF massimi pari al doppio del tuo livello da mago più il modificatore di Intelligenza (oggi {{ward_max}}) e assorbe i danni al posto tuo, applicando prima le tue resistenze o vulnerabilità; a 0 PF smette di assorbire ma resta attivo. Recupera PF pari al doppio del livello dello slot ogni volta che lanci un incantesimo di Abiurazione con uno slot, oppure puoi spenderne uno come azione bonus per lo stesso effetto. Traccialo come PF temporanei (chip "Baluardo Arcano" in Combattimento).' }
+            ],
+            6: [
+              { name: 'Baluardo Proiettato', desc: 'Quando una creatura che vedi entro 9 m subisce danno, puoi usare la reazione per far assorbire quel danno al tuo Baluardo Arcano invece che a lei, applicando prima le sue resistenze o vulnerabilità; se il danno lo riduce a 0 PF, la creatura subisce il resto.' }
+            ],
+            10: [
+              { name: 'Interruzione degli Incantesimi', desc: 'Hai sempre preparati Contro Incantesimo e Dissolvi Magie. Puoi lanciare Dissolvi Magie come azione bonus, sommando il bonus di competenza alla prova di verifica. Se lanci uno dei due con uno slot e l\'incantesimo bersaglio non viene interrotto, lo slot non si consuma.' }
+            ],
+            14: [
+              { name: 'Resistenza Magica', desc: 'Hai vantaggio ai tiri salvezza contro gli incantesimi e resistenza ai danni inflitti dagli incantesimi.' }
+            ]
+          }
+        },
         divinatore: {
           name: 'Tradizione della Divinazione',
           tenets: 'Squarcia i veli di spazio, tempo e coscienza per svelare i segreti del multiverso.',

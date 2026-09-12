@@ -107,7 +107,12 @@
       gnome_extra: gnomeExtra,
 
       land_name: circleLand ? circleLand.name : 'non scelto',
-      land_resist: circleLand ? circleLand.resist : 'del terreno scelto'
+      land_resist: circleLand ? circleLand.resist : 'del terreno scelto',
+
+      // Baluardo Arcano (Mago, Tradizione dell'Abiurazione): PF massimi del
+      // baluardo, 2×livello + mod. Intelligenza — vedi js/stats.js (chip
+      // "Baluardo Arcano" che apre il modale PF temporanei precompilato).
+      ward_max: 2 * level + view.mods.INT
     };
   }
 

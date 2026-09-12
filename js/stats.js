@@ -569,6 +569,23 @@
         }
       });
     }
+    /* Baluardo Arcano (Mago, Tradizione dell'Abiurazione): PF temporanei
+       che l'app già gestisce (barra dedicata, assorbimento automatico),
+       niente pool nuovo — il chip apre subito il modale esistente
+       precompilato col massimo di oggi (js/sheet.js
+       openTempHpPrefilled). */
+    if (ch.classId === 'mago' && view.subclassId === 'abiurazione') {
+      var wardMax = 2 * view.level + view.mods.INT;
+      chips.push({
+        label: 'Baluardo Arcano',
+        detail: 'max ' + wardMax + ' PF · tocca per attivare',
+        onClick: function () {
+          if (window.AppSheet && window.AppSheet.openTempHpPrefilled) {
+            window.AppSheet.openTempHpPrefilled(wardMax);
+          }
+        }
+      });
+    }
     if (ch.classId === 'paladino') {
       var punizioneDivina = null;
       (window.MANUAL_55.spells || []).forEach(function (s) {
