@@ -44,6 +44,28 @@
   color: var(--text-primary);
 }
 
+/* Badge del bonus di background (creazione, passo Punteggi): spazio
+   riservato accanto al nome su OGNI riga, anche senza bonus (is-empty), così
+   le righe restano allineate in colonna invece di "ballare". */
+.edit-stat-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-stat-bonus-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #241d0d;
+  background: var(--accent-gold);
+  border-radius: var(--radius-pill);
+  padding: 1px 7px;
+}
+
+.edit-stat-bonus-badge.is-empty {
+  visibility: hidden;
+}
+
 .edit-stepper {
   display: flex;
   align-items: center;

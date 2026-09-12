@@ -106,14 +106,10 @@
 
   var progressFillEl, stepNumEl, stepTitleEl, stepBodyEl, backBtn, nextBtn, footerNoteEl;
 
-  // Riscrive il riepilogo del background nel passo Punteggi; null fuori da
-  // quel passo (lo imposta renderPunteggi, lo azzera render()).
-  var bgRecapRefresh = null;
-
   // Quale sezione dell'accordion del background Personalizzato è aperta: solo
-  // stato di UI, non entra nel draft del personaggio (stessa idea di
-  // bgRecapRefresh sopra). Senza questo, ogni scelta dentro una sezione
-  // ridisegna l'intero accordion e lo farebbe ripartire sempre dalla prima.
+  // stato di UI, non entra nel draft del personaggio. Senza questo, ogni
+  // scelta dentro una sezione ridisegna l'intero accordion e lo farebbe
+  // ripartire sempre dalla prima.
   var customOpenSectionId = 'caratteristiche';
 
   // Ordine e etichette delle 6 caratteristiche: stessa convenzione di
@@ -1046,6 +1042,23 @@
       : (mod >= 0 ? '+' : '−') + Math.abs(mod);
   }
 
+  /* Etichetta di riga con badge del bonus di background (revisione passo
+     Punteggi): prima il bonus stava in un riepilogo sopra la tabella, poco
+     visibile — ora un badge dorato accanto al nome, con spazio riservato
+     anche quando è vuoto (stessa larghezza su ogni riga, niente righe che
+     "ballano"). Condiviso dai 3 metodi (point-buy/array/manuale): un solo
+     posto da aggiornare. */
+  function buildStatLabel(k, bonusMap) {
+    var wrap = el('span', 'edit-stat-label-wrap');
+    wrap.appendChild(el('span', 'edit-stat-label', ABILITY_LABELS[k]));
+    var bonus = bonusMap[k];
+    var badge = el('span', 'edit-stat-bonus-badge' + (bonus ? '' : ' is-empty'),
+      '+' + (bonus || 0));
+    wrap.appendChild(badge);
+
+    return wrap;
+  }
+
   // Sezione Point-buy: stepper −/+ per caratteristica (8-15), contatore
   // punti live e pulsante "Consigliati per la classe".
   function buildPointBuySection() {
@@ -1058,10 +1071,14 @@
 
     function refresh() {
       var used = pointBuyUsed();
+      var bonusMap = bgBonusMap();
       ABILITY_ORDER.forEach(function (k) {
         var v = draft.abilities[k];
-        scoreEls[k].textContent = String(v);
-        modEls[k].textContent = abilityModText(v);
+        // Punteggio e modificatore mostrati sono quelli REALI (base +
+        // bonus di background), non solo la base spendibile nel point-buy —
+        // il badge accanto al nome spiega la differenza (buildStatLabel).
+        scoreEls[k].textContent = String(v + bonusMap[k]);
+        modEls[k].textContent = abilityModText(v + bonusMap[k]);
 
         var costUp = pointBuyCost(v + 1) - pointBuyCost(v);
         var disablePlus = v >= 15 || (used + costUp) > POINT_BUY_BUDGET;
@@ -1076,17 +1093,18 @@
       updateNav();
     }
 
+    var initialBonusMap = bgBonusMap();
     ABILITY_ORDER.forEach(function (k) {
       var row = el('div', 'edit-stat-row');
-      row.appendChild(el('span', 'edit-stat-label', ABILITY_LABELS[k]));
+      row.appendChild(buildStatLabel(k, initialBonusMap));
 
       var stepper = el('div', 'edit-stepper');
       var minus = el('button', 'stepper-btn minus', '−');
       minus.type = 'button';
       minus.setAttribute('aria-label', 'Diminuisci ' + ABILITY_LABELS[k]);
       var vals = el('div', 'edit-stat-vals');
-      var scoreEl = el('span', 'edit-stat-score', String(draft.abilities[k]));
-      var modEl = el('span', 'edit-stat-mod', abilityModText(draft.abilities[k]));
+      var scoreEl = el('span', 'edit-stat-score', String(draft.abilities[k] + initialBonusMap[k]));
+      var modEl = el('span', 'edit-stat-mod', abilityModText(draft.abilities[k] + initialBonusMap[k]));
       vals.appendChild(scoreEl);
       vals.appendChild(modEl);
       var plus = el('button', 'stepper-btn plus', '+');
@@ -1159,6 +1177,7 @@
 
     function rebuildOptions() {
       var used = usedValues();
+      var bonusMap = bgBonusMap();
       ABILITY_ORDER.forEach(function (k) {
         var select = selects[k];
         var current = draft.abilities[k];
@@ -1183,14 +1202,17 @@
         });
 
         select.value = current != null ? String(current) : '';
-        modEls[k].textContent = abilityModText(current);
+        // Modificatore REALE (valore scelto + bonus di background), non
+        // solo quello dell'array — il badge accanto al nome spiega perché.
+        modEls[k].textContent = current != null ? abilityModText(current + bonusMap[k]) : '';
       });
       updateNav();
     }
 
+    var arrayBonusMap = bgBonusMap();
     ABILITY_ORDER.forEach(function (k) {
       var row = el('div', 'edit-stat-row');
-      row.appendChild(el('span', 'edit-stat-label', ABILITY_LABELS[k]));
+      row.appendChild(buildStatLabel(k, arrayBonusMap));
 
       var vals = el('div', 'create-array-vals');
       var select = document.createElement('select');
@@ -1236,10 +1258,13 @@
     var scoreEls = {}, modEls = {}, plusBtns = {}, minusBtns = {};
 
     function refresh() {
+      var bonusMap = bgBonusMap();
       ABILITY_ORDER.forEach(function (k) {
         var v = draft.abilities[k];
-        scoreEls[k].textContent = String(v);
-        modEls[k].textContent = abilityModText(v);
+        // Punteggio/modificatore REALI (base + bonus di background), come
+        // nel point-buy — vedi buildStatLabel per il badge accanto al nome.
+        scoreEls[k].textContent = String(v + bonusMap[k]);
+        modEls[k].textContent = abilityModText(v + bonusMap[k]);
 
         var disableMinus = v <= 3;
         minusBtns[k].disabled = disableMinus;
@@ -1252,17 +1277,18 @@
       updateNav();
     }
 
+    var manualBonusMap = bgBonusMap();
     ABILITY_ORDER.forEach(function (k) {
       var row = el('div', 'edit-stat-row');
-      row.appendChild(el('span', 'edit-stat-label', ABILITY_LABELS[k]));
+      row.appendChild(buildStatLabel(k, manualBonusMap));
 
       var stepper = el('div', 'edit-stepper');
       var minus = el('button', 'stepper-btn minus', '−');
       minus.type = 'button';
       minus.setAttribute('aria-label', 'Diminuisci ' + ABILITY_LABELS[k]);
       var vals = el('div', 'edit-stat-vals');
-      var scoreEl = el('span', 'edit-stat-score', String(draft.abilities[k]));
-      var modEl = el('span', 'edit-stat-mod', abilityModText(draft.abilities[k]));
+      var scoreEl = el('span', 'edit-stat-score', String(draft.abilities[k] + manualBonusMap[k]));
+      var modEl = el('span', 'edit-stat-mod', abilityModText(draft.abilities[k] + manualBonusMap[k]));
       vals.appendChild(scoreEl);
       vals.appendChild(modEl);
       var plus = el('button', 'stepper-btn plus', '+');
@@ -1703,32 +1729,11 @@
   }
 
   function renderPunteggi(container) {
-    /* Riepilogo del background in cima: i suoi aumenti si vedono mentre si
-       distribuiscono i punti — è il motivo per cui questo passo viene dopo. */
-    var bg = currentBg();
-    if (bg) {
-      var recap = el('div', 'create-bg-recap');
-      recap.appendChild(el('div', 'create-bg-recap-title', bg.name));
-      var righe = el('div');
-      recap.appendChild(righe);
-      container.appendChild(recap);
-
-      /* Si riscrive a ogni modifica dei punteggi (updateNav la richiama):
-         altrimenti resterebbe ferma ai valori di partenza e non servirebbe a
-         nulla — il punto di questo passo è vedere il totale mentre distribuisci. */
-      bgRecapRefresh = function () {
-        var bonus = bgBonusMap();
-        righe.textContent = '';
-        bg.abilities.forEach(function (k) {
-          var b = bonus[k];
-          var base = draft.abilities[k];
-          righe.appendChild(el('div', 'create-pack-line',
-            ABILITY_LABELS[k] + ': ' + (base == null ? '—' : base) +
-            (b && base != null ? ' + ' + b + ' = ' + (base + b) : (b ? ' + ' + b : ' (nessun aumento)'))));
-        });
-      };
-      bgRecapRefresh();
-    }
+    /* Il riepilogo degli aumenti di background (prima un blocco a parte qui
+       sopra, poco visibile) ora vive dentro la tabella stessa: badge dorato
+       accanto al nome di ogni caratteristica + punteggio/modificatore già
+       corretti con il bonus incluso (buildStatLabel, condiviso dai 3 metodi
+       più sotto). Revisione 2026-09-12, alternativa B tra 3 con preview. */
 
     /* Riepilogo fisso delle caratteristiche che contano per la classe scelta
        (restyling 2026-07-29, alternativa C tra 3 con preview): le 6 righe
@@ -2757,7 +2762,6 @@
 
   function render() {
     var step = STEPS[stepIndex];
-    bgRecapRefresh = null; // il riepilogo appartiene al solo passo Punteggi
 
     if (progressFillEl) {
       progressFillEl.style.width = ((stepIndex + 1) / STEPS.length * 100) + '%';
@@ -2809,12 +2813,6 @@
   // ridisegnare tutto il corpo del passo (che perderebbe focus/selezione).
   function updateNav() {
     var isLast = stepIndex === STEPS.length - 1;
-
-    // Le sezioni dei punteggi chiamano updateNav a ogni modifica: è il punto
-    // giusto per tenere allineato il riepilogo del background.
-    if (bgRecapRefresh) {
-      bgRecapRefresh();
-    }
 
     if (nextBtn) {
       nextBtn.textContent = isLast ? 'Crea personaggio' : 'Avanti →';
