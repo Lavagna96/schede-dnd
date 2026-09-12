@@ -9,7 +9,67 @@
 
 ## Dove siamo
 
-- **Ultimo aggiornamento:** 2026-08-16
+- **Ultimo aggiornamento:** 2026-09-12
+- **Nota di sessione (2026-09-12): Circolo della Terra (Druido) modellato —
+  risolto l'ultimo dei problemi architetturali "sotto-scelta dentro la
+  sottoclasse" rimasti (l'altro, Tradizione dell'Abiurazione del Mago, resta
+  da fare). Il nodo era la scelta di tipo di terreno (arido/polare/temperato/
+  tropicale, PHB p.83-84), **cambiabile a ogni riposo lungo** e non fissa
+  come le altre sottoclassi: guida sia gli incantesimi sempre preparati sia
+  la resistenza di Baluardo della Natura al 10°.
+  **UX (3 alternative con preview mostrate ad Andrea, mockup HTML con lo
+  stile reale dell'app)**: A — icona matita nei Tratti, B — chip in "Stile &
+  Privilegi" (Info/Comb) che apre subito il picker, C — pillole nel
+  Grimorio sopra la lista incantesimi. **Scelta la B.**
+  **Dati** (`js/manual-55.js`): nuova sottoclasse `terra` con
+  `landSpellsByLevel` (4 tabelle, una per terreno, sostituisce
+  `spellsByLevel`) invece dei soliti incantesimi fissi — 5 incantesimi nuovi
+  nel catalogo (Immobilizzare Persona, Cono di Freddo, Incedere tra gli
+  Alberi, Raggio Malato, Metamorfosi, riassunti originali dal PDF) e tag
+  `'druido'` aggiunto a 8 esistenti riusati (Spruzzo Acido, Presa
+  Elettrizzante, Palla di Fuoco, Sonno, Nube Fetida, Sfocatura, Passo nella
+  Nebbia, Ragnatela). Nuovo lookup `circleLands` (nome + resistenza per
+  terreno, stesso pattern di `dragonAncestors`). Manuale `version` 54→55,
+  cache busting `?v=237`→`?v=238`.
+  **Stato persistito** (`js/storage.js`): nuovo `character.circleLandId`
+  (null finché non scelto — nessun incantesimo fisso prima della scelta,
+  fedele al manuale).
+  **Motore** (`js/grimorio.js`): nuovo helper `effectiveSubSpellsByLevel(sub)`
+  che sostituisce la lettura diretta di `sub.spellsByLevel` in
+  `getFixedIds()`/`getLockedIds()` — se la sottoclasse ha `landSpellsByLevel`
+  risolve la tabella del terreno scelto, altrimenti si comporta come prima
+  (nessuna sottoclasse esistente toccata).
+  **Tratti** (`js/traits.js`): nuovi segnaposto `{{land_name}}`/
+  `{{land_resist}}` nel contesto di `fillTemplate` (stesso meccanismo di
+  `{{dragon_ancestor}}`), usati dalle descrizioni di "Incantesimi del
+  Circolo" e "Baluardo della Natura" per mostrare il terreno/resistenza
+  attuali senza logica nuova nel renderer.
+  **UI** (`js/stats.js`+`js/edit-sheet.js`): chip "Terra: <nome>" in Stile &
+  Privilegi (solo per Druido Circolo della Terra), il cui tocco apre un
+  nuovo sheet dedicato (`AppEditSheet.openCircleLand`, 4 chip esclusive
+  arido/polare/temperato/tropicale, stesso `.chip`/`.chip-row` già usato per
+  Stile di Combattimento nel level-up) invece della descrizione di sola
+  lettura — applica e chiude al tocco, senza un passaggio "Salva" separato
+  (un solo campo, non serve accumulare modifiche). `buildChipRow` esteso con
+  un `onClick` opzionale per questo caso.
+  **Verificato in locale** (stato mutato in memoria su Tharion via console,
+  MAI salvato — zero scritture su Firestore, nessun dato di test residuo):
+  `getFixedIds()` per un Druido Circolo della Terra livello 10 restituisce
+  esattamente gli incantesimi giusti per Temperato (Passo nella Nebbia/Presa
+  Elettrizzante/Sonno/Fulmine/Libertà di Movimento/Incedere tra gli Alberi)
+  e per Arido (Sfocatura/Mani Ardenti/Dardo di Fuoco/Palla di Fuoco/Piaga/
+  Muro di Pietra), e nessuno con terreno non scelto. Nell'app reale: chip
+  "Terra: Temperato" in Info/Comb, sheet di cambio con le 4 opzioni e quella
+  giusta evidenziata, Tratti con "Terreno attuale: Temperato" e "Baluardo
+  della Natura... (Temperato: Fulmine)" risolti correttamente, Grimorio con
+  Sonno/Fulmine/Libertà di Movimento/Incedere tra gli Alberi FISSI nelle tab
+  giuste. Arma Sacra correttamente assente (non più Paladino). Console
+  pulita (i soli 2 errori 400 presenti sono di rete/Firebase, identici prima
+  e dopo la modifica).
+  **Non ancora committato/deployato a fine sessione.**
+  Resta **una sola** sottoclassi rimandata: Tradizione dell'Abiurazione
+  (Mago) — Baluardo Arcano, un pool di PF con assorbimento/rigenerazione mai
+  visto finora.
 - **Nota di sessione (2026-08-16, seconda parte): risolto il problema
   architetturale "incantatore da sottoclasse"** — FATTO, stessa sessione di
   "CA su due caratteristiche" sopra. Cavaliere Occulto (Guerriero) e
