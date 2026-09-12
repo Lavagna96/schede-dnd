@@ -10,6 +10,54 @@
 ## Dove siamo
 
 - **Ultimo aggiornamento:** 2026-09-12
+- **Nota di sessione (2026-09-12, seconda parte): Tradizione dell'Abiurazione
+  (Mago) modellata — con questa, TUTTE LE SOTTOCLASSI DEL PHB 2024 SONO
+  COMPLETE (11 classi × 4 sottoclassi ciascuna).** Il Baluardo Arcano — lo
+  "scudo di PF con assorbimento/rigenerazione" che teneva ferma questa
+  sottoclasse fin dalla Fase 5 — si è rivelato **non un tipo di risorsa
+  nuovo**: concettualmente è identico ai **PF temporanei** che l'app gestisce
+  già da sempre (barra dedicata sotto i PF, assorbimento automatico prima di
+  loro in `applyHpChange`, azzerati al riposo lungo in `longRest` —
+  `js/sheet.js`). Stessa sorpresa già vista più volte in questa Fase 5
+  (Luce Guaritrice del Warlock, CA a due caratteristiche…): il blocco era
+  presunto, il meccanismo esisteva già.
+  **UX (3 alternative con preview)**: A — solo testo dinamico nei Tratti
+  (nessuna UI nuova), B — chip in Info/Comb che apre il modale PF Temporanei
+  già esistente precompilato col massimo calcolato, C — card dedicata in
+  Risorse stile Imposizione delle Mani (più lavoro, perde l'assorbimento
+  automatico già gratis con le altre due). **Scelta la B.**
+  **Dati** (`js/manual-55.js`): nuova sottoclasse `abiurazione` — Sapiente
+  dell'Abiurazione (incantesimi liberi dalla propria scuola, come le altre 3
+  tradizioni), Baluardo Arcano e Baluardo Proiettato (descrittivi, PF massimi
+  dinamici via segnaposto), Interruzione degli Incantesimi (`spellsByLevel`
+  al 10°: Contro Incantesimo + Dissolvi Magie sempre preparati, entrambi già
+  in catalogo), Resistenza Magica al 14°. Nessun incantesimo nuovo nel
+  catalogo. Manuale `version` 55→56, cache busting `?v=238`→`?v=239`.
+  **Tratti** (`js/traits.js`): nuovo segnaposto `{{ward_max}}` (2×livello +
+  mod. Intelligenza) nel contesto di `fillTemplate`, stesso meccanismo di
+  `{{land_name}}`/`{{dragon_ancestor}}`.
+  **UI** (`js/stats.js`+`js/sheet.js`): chip "Baluardo Arcano" in Stile &
+  Privilegi (solo Mago Abiurazione) che apre — invece della descrizione di
+  sola lettura — il modale PF Temporanei di sempre già precompilato col
+  valore di oggi (`AppSheet.openTempHpPrefilled`, nuova funzione che
+  riusa `openHpModal`/`updateHpModalPreview` esistenti). Zero pool/motore
+  nuovo, riusa `buildChipRow`/`onClick` già esteso per Terra del Circolo.
+  **Verificato in locale** (stato mutato in memoria su Tharion via console,
+  MAI salvato — zero scritture su Firestore): chip "Baluardo Arcano max 18
+  PF" per un Mago Abiurazione livello 9 (INT 10, mod 0 → 2×9+0=18) corretto;
+  tocco → modale "PF Temporanei" con "0 → 18" e input precompilato a 18;
+  Tratti con Sapiente/Baluardo Arcano/Baluardo Proiettato a livello 9
+  (Interruzione degli Incantesimi/Resistenza Magica correttamente assenti,
+  arrivano al 10°/14°); descrizione di Baluardo Arcano con "(oggi 18)"
+  risolto; a livello 10 in prova, `getFixedIds()` include correttamente
+  `contro-incantesimo`+`dissolvi-magie`. Console pulita (i soli 2 errori 400
+  presenti sono di rete/Firebase, indipendenti dalla modifica).
+  **Non ancora deployato a fine sessione** (committato).
+  **Con questo la Fase 5 "sottoclassi" è chiusa del tutto**: tutte e 11 le
+  classi hanno le 4 sottoclassi del PHB 2024 modellate. Prossimo passo aperto:
+  nessuna sottoclasse da fare, si torna alle Decisioni aperte della Fase 5
+  (creazione: livello di partenza/metodo punteggi) o alla Fase 6 (multiclasse)
+  quando Andrea deciderà di riprenderle.
 - **Nota di sessione (2026-09-12): Circolo della Terra (Druido) modellato —
   risolto l'ultimo dei problemi architetturali "sotto-scelta dentro la
   sottoclasse" rimasti (l'altro, Tradizione dell'Abiurazione del Mago, resta
