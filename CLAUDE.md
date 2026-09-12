@@ -1,4 +1,4 @@
-# Regole di collaborazione — Scheda D&D Paladino
+# Regole di collaborazione — Schede & Imprese (D&D)
 
 Regole da rispettare SEMPRE in questo progetto, in ogni sessione.
 
@@ -49,7 +49,7 @@ Regole da rispettare SEMPRE in questo progetto, in ogni sessione.
 ## Note tecniche del progetto
 
 - Sito statico (no framework): `index.html` + `css/` + `js/`, deploy su
-  GitHub Pages (push su `main` → https://lavagna96.github.io/scheda_d-d_paladino/).
+  GitHub Pages (push su `main` → https://lavagna96.github.io/schede-dnd/).
 - **Cache busting**: a ogni modifica di CSS/JS incrementa `?v=N` sia in
   `index.html` sia negli `@import` di `css/styles.css` (devono avere lo
   stesso numero).
