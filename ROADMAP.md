@@ -9,7 +9,22 @@
 
 ## Dove siamo
 
-- **Ultimo aggiornamento:** 2026-09-12
+- **Ultimo aggiornamento:** 2026-10-30
+- **Nota di sessione (2026-10-30): bug slot incantesimo dal 3° livello in
+  su** — segnalato da Andrea (Tharion al 9°: nel Grimorio mancava lo slot di
+  3° livello). Causa: in `index.html` esistevano solo due card slot scritte
+  a mano (`sl1`/`sl2`, eredità della scheda di Tharion al 7°); il motore
+  calcolava correttamente `sl3`…`sl9`, ma `renderResources` (`js/stats.js`)
+  generava card dinamiche solo per le risorse non-slot. Colpiva **ogni**
+  incantatore con slot dal 3° livello in su (Mago/Chierico/Druido dal 5°,
+  Paladino/Ranger dal 9°) e il Warlock dal 5° (Patto al 3° livello: nessuna
+  card del tutto). Fix: tolte le due card statiche, tutte le card slot
+  (I…IX) generate da `buildSlotCard` nell'ordine del motore, stesso markup
+  di prima. Verificato in locale (stato mutato solo in memoria, mai
+  salvato): Paladino 8 → 4/3, Paladino 9 → 4/3/2, Paladino 17 → 4/3/3/3/1,
+  Mago 9 → 4/3/3/3/1, Warlock 5 → una card III 2/2, Barbaro → sezione
+  nascosta; nessun duplicato a ri-render, console pulita. Cache busting
+  `?v=241`→`?v=242`. **Non ancora committato/deployato.**
 - **Nota di sessione (2026-09-12, quarta parte): bonus di background
   spostato dentro la tabella Punteggi.** Richiesta diretta di Andrea: il
   riepilogo degli aumenti di background (+2/+1 o +1/+1/+1) stava in un
