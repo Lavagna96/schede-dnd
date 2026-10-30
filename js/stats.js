@@ -379,6 +379,44 @@
     return card;
   }
 
+  var ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+
+  /* Card di uno slot incantesimo (sl1..sl9) nel Grimorio, stesso markup delle
+     due che prima erano scritte a mano in index.html (solo 1° e 2°, la
+     scheda di Tharion al 7°): da lì in su gli slot calcolati dal motore non
+     avevano nessuna card, es. il 3° livello di un Paladino al 9°. */
+  function buildSlotCard(r) {
+    var lvl = parseInt(r.key.slice(2), 10);
+    var card = document.createElement('div');
+    card.className = 'res-card';
+    card.setAttribute('data-key', r.key);
+    card.setAttribute('data-max', r.max);
+    card.setAttribute('data-dynamic', '1');
+
+    var med = document.createElement('span');
+    med.className = 'rc-med rc-med-txt';
+    med.setAttribute('aria-hidden', 'true');
+    med.textContent = ROMAN[lvl - 1] || String(lvl);
+    card.appendChild(med);
+
+    var info = document.createElement('div');
+    info.className = 'rc-info';
+    var name = document.createElement('span');
+    name.className = 'rc-name';
+    name.textContent = 'Slot ' + lvl + '° livello';
+    info.appendChild(name);
+    var ctx = document.createElement('span');
+    ctx.className = 'rc-ctx';
+    ctx.textContent = 'recupero: riposo lungo';
+    info.appendChild(ctx);
+    info.appendChild(document.createElement('div')).className = 'segbar';
+    card.appendChild(info);
+
+    card.appendChild(document.createElement('span')).className = 'rc-count';
+
+    return card;
+  }
+
   /* Rendering generico delle risorse (Fase 5, step Barbaro): mostra/popola solo
      le card pertinenti alla classe del personaggio, nasconde le altre (così un
      Barbaro non vede Incanalare/Punizione/Destriero…), genera dinamicamente le
@@ -409,8 +447,20 @@
       }
     });
 
+    // slot incantesimo: tutte le card generate qui, nell'ordine del motore
+    // (sl1→sl9), così compaiono anche i livelli di slot dal 3° in su.
+    var slotSec = document.querySelector('#view-grimorio .res-sec-slots');
+    view.resources.forEach(function (r) {
+      if (r.key.indexOf('sl') !== 0 || !slotSec) { return; }
+      var card = buildSlotCard(r);
+      slotSec.appendChild(card);
+      if (window.AppSheet && window.AppSheet.renderResourceCard) {
+        window.AppSheet.renderResourceCard(card);
+      }
+    });
+
     // card dinamiche per le risorse di classe senza HTML statico (es. Furia).
-    // Escludo slot ('sl*') e oggetti ('item-*'): hanno una gestione a parte.
+    // Escludo slot ('sl*', sopra) e oggetti ('item-*'): gestione a parte.
     view.resources.forEach(function (r) {
       if (r.key.indexOf('item-') === 0 || r.key.indexOf('sl') === 0) { return; }
       if (document.querySelector('.res-card[data-key="' + r.key + '"]:not([data-dynamic])')) { return; }
