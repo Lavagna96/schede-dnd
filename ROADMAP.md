@@ -29,12 +29,23 @@
   (32.940 controlli), equità del d20 (chi-quadro 13 su 200.000 tiri, soglia
   43,8), casi limite forzati, viewport 375×667/375×812/430×932.
   **Prossimi punti da fare (decisi da Andrea il 2026-11-05):**
-  1. Aggiungere alla scheda Jack of All Trades e Indebolimento: oggi il motore
-     non li calcola, quindi nemmeno il dado (per un Bardo i totali possono
-     risultare più bassi del dovuto).
-  2. Tiro toccando un'abilità sulla scheda.
-  3. Slot del patto del Warlock: controllare sul PDF se la dicitura "recupero:
+  1. Tiro toccando un'abilità sulla scheda.
+  2. Slot del patto del Warlock: controllare sul PDF se la dicitura "recupero:
      riposo lungo" è giusta e correggerla se non lo è.
+
+  **Tuttofare e Indebolimento (fatti):** Tuttofare (Bardo dal 2°) dà metà
+  competenza per difetto solo sulle prove di abilità senza competenza, come
+  dice il PHB 2024: non su iniziativa, prove di caratteristica pura e tiri
+  salvezza; sale anche la Percezione passiva. Indebolimento (scelta B: nella
+  card Punti Ferita, `js/exhaustion.js`, livello in `character.exhaustion`):
+  −2 per livello su tutti i tiri di d20, numeri della scheda già ridotti e in
+  rosso, carta nel Lancio dadi; −1,5 m di velocità per livello; −1 a ogni riposo
+  lungo, anche a ogni breve per il Ranger dal 10°. Al livello 6 solo un avviso,
+  i Punti Ferita non si toccano. Non cambiano CD degli incantesimi, Percezione
+  passiva (lettura nostra: il PDF riduce il tiro, non il bonus) e attacco della
+  cavalcatura; il malus non finisce negli attacchi salvati con "Da un'arma". Gli
+  attacchi personalizzati con testo non numerico restano come scritti. Cache
+  busting `?v=248`.
 
   **Gesto di lancio (segnalato da Andrea su iPhone, scelta B "afferra e
   scaglia"):** il dado ascoltava solo il `click`, quindi lo swipe col dito non
