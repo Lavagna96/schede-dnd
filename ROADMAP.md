@@ -29,9 +29,22 @@
   (32.940 controlli), equità del d20 (chi-quadro 13 su 200.000 tiri, soglia
   43,8), casi limite forzati, viewport 375×667/375×812/430×932.
   **Prossimi punti da fare (decisi da Andrea il 2026-11-05):**
-  1. Tiro toccando un'abilità sulla scheda.
-  2. Slot del patto del Warlock: controllare sul PDF se la dicitura "recupero:
+  1. Slot del patto del Warlock: controllare sul PDF se la dicitura "recupero:
      riposo lungo" è giusta e correggerla se non lo è.
+  2. Tirare i danni direttamente da un attacco (con i critici) o da un
+     incantesimo (es. pulsante 8d6 sulla Palla di Fuoco).
+
+  **Tiro libero e tiro dalla scheda (scelta C, "foglio"):** nel foglio di scelta
+  del Lancio dadi c'è la scheda "Dadi": d4, d6, d8, d10, d12, d20 e d100 (due d10
+  veri, 00+0 vale 100), quantità e bonus con − e +, massimo 40 dadi, tipi misti.
+  Il totale sta al posto della CD, il dettaglio dei dadi sotto la cornice; niente
+  CD, verdetto e vantaggio. I recenti (6) stanno sul palco e nel foglio e si tirano
+  con un tocco; scelta, recenti e tiri liberi in cronologia restano sul dispositivo.
+  Il tocco su abilità, caratteristiche, iniziativa, tiri salvezza e attacchi apre il
+  Lancio dadi con quel tiro pronto, senza lanciare da solo. Motore generico in
+  `js/dice-3d.js` (cifre di ogni dado disegnate al primo uso), scelta in
+  `js/dice-free.js`. Da provare su iPhone: fluidità con 40 dadi. Cache busting
+  `?v=249`.
 
   **Tuttofare e Indebolimento (fatti):** Tuttofare (Bardo dal 2°) dà metà
   competenza per difetto solo sulle prove di abilità senza competenza, come
@@ -58,7 +71,7 @@
   Cache busting `?v=245`. Poi, su richiesta di Andrea (scelta B fra 3): il dado
   si ferma dritto, senza pendere di lato, con la faccia appena rivolta in su.
   Cache busting `?v=246`.
-  **Più avanti:** altri dadi (d4–d100) e danni con critico; Ispirazione Bardica;
+  **Più avanti:** Ispirazione Bardica;
   suoni.
 - **Nota di sessione (2026-10-30): bug slot incantesimo dal 3° livello in
   su** — segnalato da Andrea (Tharion al 9°: nel Grimorio mancava lo slot di
