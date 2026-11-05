@@ -29,10 +29,16 @@
   (32.940 controlli), equità del d20 (chi-quadro 13 su 200.000 tiri, soglia
   43,8), casi limite forzati, viewport 375×667/375×812/430×932.
   **Prossimi punti da fare (decisi da Andrea il 2026-11-05):**
-  1. Slot del patto del Warlock: controllare sul PDF se la dicitura "recupero:
-     riposo lungo" è giusta e correggerla se non lo è.
-  2. Tirare i danni direttamente da un attacco (con i critici) o da un
+  1. Tirare i danni direttamente da un attacco (con i critici) o da un
      incantesimo (es. pulsante 8d6 sulla Palla di Fuoco).
+
+  **Slot del patto del Warlock (corretto):** il PHB ridà tutti gli slot di Magia
+  del Patto a ogni riposo breve o lungo, l'app li ricaricava solo col lungo e
+  diceva "recupero: riposo lungo". Ora recupero e dicitura sono giusti. La sezione
+  "Riposo breve" resta visibile anche senza card quando serve (slot del patto,
+  Indebolimento del Ranger dal 10°). Cache busting `?v=250`. Astuzia Magica (2°,
+  metà degli slot una volta per riposo lungo) sta solo nel manuale, non come
+  risorsa.
 
   **Tiro libero e tiro dalla scheda (scelta C, "foglio"):** nel foglio di scelta
   del Lancio dadi c'è la scheda "Dadi": d4, d6, d8, d10, d12, d20 e d100 (due d10
