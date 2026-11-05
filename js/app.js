@@ -997,6 +997,7 @@
     window.AppTreasury.init();
     window.AppDiary.init();
     window.AppInspiration.init();
+    window.AppExhaustion.init();
     window.AppBottomSheet.init();
     window.AppEditSheet.init();
     window.AppItems.init();

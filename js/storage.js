@@ -90,6 +90,7 @@
     modifiers: [],
     extraResources: [],
     customAttacks: [],
+    exhaustion: 0,
     items: [],
     feats: [],
     metamagicIds: [],

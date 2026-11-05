@@ -395,6 +395,7 @@
   font: 500 9.8px/1.12 var(--font-title);
   text-align: center;
   color: var(--dice-label);
+  overflow-wrap: anywhere; /* con 6 carte una parola lunga non invade la vicina */
 }
 
 .dice-cards.many .dice-card-lbl {

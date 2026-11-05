@@ -120,7 +120,7 @@
       initNote.textContent = view.initiativeNote;
     }
     if (speedEl) {
-      speedEl.textContent = view.speedM + ' m';
+      speedEl.textContent = view.speedM.toLocaleString('it-IT') + ' m';
     }
   }
 
@@ -538,10 +538,14 @@
         state.spent[r.key] = 0;
       }
     });
+    var exhaustionChanged = window.AppExhaustion.applyRest(state, 'short');
     window.AppStorage.saveState(state);
     render();
     if (window.AppGrimorio) {
       window.AppGrimorio.renderSlots();
+    }
+    if (exhaustionChanged) {
+      window.AppExhaustion.refreshSheet();
     }
   }
 
@@ -553,6 +557,7 @@
     state.pools.steedhp = poolMax().steedhp;
     state.pools.tempHp = 0;
     state.deathSaves = { success: 0, fail: 0 };
+    var exhaustionChanged = window.AppExhaustion.applyRest(state, 'long');
     window.AppStorage.saveState(state);
     render();
     if (window.AppHeader) {
@@ -560,6 +565,9 @@
     }
     if (window.AppGrimorio) {
       window.AppGrimorio.renderSlots();
+    }
+    if (exhaustionChanged) {
+      window.AppExhaustion.refreshSheet();
     }
   }
 
@@ -615,7 +623,7 @@
     var actions = document.getElementById('steed-actions');
     if (actions) {
       actions.textContent = '';
-      var slamDesc = 'Attacco da mischia, ' + fmt(view.spellAttack) +
+      var slamDesc = 'Attacco da mischia, ' + fmt(view.spellAttackBase) +
         ' al tiro per colpire, portata 1,5 m. Danno: 1d8+' + slot + ' (tipo secondo la forma).';
       actions.appendChild(actionCard(data.slam.name, slamDesc, data.slam.desc));
       actions.appendChild(actionCard(data.lifeBond.name,
@@ -673,6 +681,9 @@
 
   function render() {
     renderResources();
+    if (window.AppExhaustion) {
+      window.AppExhaustion.render();
+    }
     bindLohBar();
     bindSteedName();
   }

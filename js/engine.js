@@ -114,6 +114,10 @@
      motore somma nel totale, una carta per voce. La caratteristica resta
      anche a +0 (la carta dice quale si sta usando), le altre voci nulle
      spariscono. */
+  var EXHAUSTION_MAX = 6;
+  var EXHAUSTION_D20 = 2;
+  var EXHAUSTION_SPEED_M = 1.5;
+
   function buildParts(parts) {
     return parts.filter(function (p) {
       return p.type === 'ability' || p.value !== 0;
@@ -294,10 +298,15 @@
       return { key: k, score: ch.abilities[k], mod: mods[k], modText: fmt(mods[k]) };
     });
 
+    // Indebolimento: −2 per livello su ogni tiro di d20 di chi ce l'ha. La CD
+    // degli incantesimi e la Percezione passiva non sono tiri e non cambiano.
+    var exhaustion = Math.max(0, Math.min(EXHAUSTION_MAX, parseInt(ch.exhaustion, 10) || 0));
+    var d20Malus = exhaustion ? -EXHAUSTION_D20 * exhaustion : 0;
+
     var saves = ABILITY_ORDER.map(function (k) {
       var prof = (ch.profSaves || []).indexOf(k) !== -1 || itemGrantsProf(ch, 'profSaves', k);
       var other = modSum(ch, 'ts');
-      var total = mods[k] + (prof ? pb : 0) + auraBonus + other;
+      var total = mods[k] + (prof ? pb : 0) + auraBonus + other + d20Malus;
 
       return {
         key: k, label: ABILITY_LABELS[k], prof: prof, total: total, text: fmt(total),
@@ -305,10 +314,16 @@
           { type: 'ability', key: k, value: mods[k] },
           { type: 'prof', value: prof ? pb : 0 },
           { type: 'aura', value: auraBonus },
-          { type: 'other', value: other }
+          { type: 'other', value: other },
+          { type: 'exhaustion', value: d20Malus }
         ])
       };
     });
+
+    // Tuttofare (Bardo, dal 2° livello): metà del bonus di competenza, per
+    // difetto, solo sulle prove di abilità in cui non si è competenti. Non
+    // vale per iniziativa e prove di caratteristica senza abilità.
+    var jackBonus = ch.classId === 'bardo' && ch.level >= 2 ? Math.floor(pb / 2) : 0;
 
     var skills = {};
     SKILLS.forEach(function (sk) {
@@ -316,7 +331,8 @@
       // Competenza (Ladro, dal 1° livello): raddoppia il bonus di competenza
       // su un'abilità già competente — non si applica da sola senza prof.
       var expertise = prof && (ch.expertiseSkills || []).indexOf(sk.id) !== -1;
-      var total = mods[sk.abil] + (prof ? pb : 0) + (expertise ? pb : 0);
+      var jack = prof ? 0 : jackBonus;
+      var total = mods[sk.abil] + (prof ? pb : 0) + (expertise ? pb : 0) + jack + d20Malus;
       skills[sk.id] = {
         id: sk.id, label: sk.label, abil: sk.abil,
         abilShort: sk.abil.charAt(0) + sk.abil.slice(1).toLowerCase(),
@@ -324,11 +340,13 @@
         parts: buildParts([
           { type: 'ability', key: sk.abil, value: mods[sk.abil] },
           { type: 'prof', value: prof ? pb : 0 },
-          { type: 'expertise', value: expertise ? pb : 0 }
+          { type: 'expertise', value: expertise ? pb : 0 },
+          { type: 'jack', value: jack },
+          { type: 'exhaustion', value: d20Malus }
         ])
       };
     });
-    var passivePerception = 10 + skills.percezione.total + modSum(ch, 'pp');
+    var passivePerception = 10 + skills.percezione.total - d20Malus + modSum(ch, 'pp');
 
     /* Armatura (Step 3.8, schermata unica Equipaggiamento): stesso schema già
        usato per lo scudo qui sotto — un oggetto kind:'armor' equipaggiato E
@@ -406,8 +424,8 @@
       ? (!armor || armor.cat !== 'pesante')
       : (!hasArmor && !hasShield);
     var speedBonus = (speedGateOk && klass.speedBonusM) ? (klass.speedBonusM[ch.level] || 0) : 0;
-    var speedM = (species.speedM || 9) + speedBonus + (elfLineage ? (elfLineage.speedBonusM || 0) : 0) +
-      modSum(ch, 'velocita');
+    var speedM = Math.max(0, (species.speedM || 9) + speedBonus + (elfLineage ? (elfLineage.speedBonusM || 0) : 0) +
+      modSum(ch, 'velocita') - EXHAUSTION_SPEED_M * exhaustion);
 
     // Bonus di sottoclasse all'iniziativa (Cercatore d'Ombre): stesso filtro
     // subclass già in uso per classResources/sacredWeapon.
@@ -415,7 +433,7 @@
     var initBonus = (initBonusDef && initBonusDef.subclass === ch.subclassId)
       ? Math.max(initBonusDef.min || 0, mods[initBonusDef.ability]) : 0;
     var initOther = modSum(ch, 'iniziativa');
-    var initiative = mods.DES + initOther + initBonus;
+    var initiative = mods.DES + initOther + initBonus + d20Malus;
 
     /* Caratteristica/tipo da incantatore: normalmente di classe, ma il
        "terzo" incantatore (Cavaliere Occulto/Truffatore Arcano, Fase 5) li
@@ -425,7 +443,8 @@
     var effCasterType = subclass.casterType || klass.casterType;
     var spellDc = 8 + pb + mods[spellAbility] + modSum(ch, 'cd-inc');
     var spellAttackOther = modSum(ch, 'att-inc');
-    var spellAttack = pb + mods[spellAbility] + spellAttackOther;
+    var spellAttackBase = pb + mods[spellAbility] + spellAttackOther;
+    var spellAttack = spellAttackBase + d20Malus;
 
     /* PF massimi: dado pieno al 1° livello, media fissa dai successivi */
     var die = parseInt((klass.hitDie || 'd8').slice(1), 10);
@@ -597,6 +616,13 @@
       ? window.AppItems.getEquippedItemOfKind(ch, 'weapon')
       : null;
     var weaponAttack = computeWeaponAttack(ch, mods, pb, w, equippedWeaponItem ? equippedWeaponItem.id : null);
+    // Il malus sta qui e non in computeWeaponAttack: quella compila anche gli
+    // attacchi salvati a mano, dove un effetto temporaneo resterebbe per sempre.
+    if (d20Malus) {
+      weaponAttack.hit += d20Malus;
+      weaponAttack.hitText = fmt(weaponAttack.hit);
+      weaponAttack.hitParts = weaponAttack.hitParts.concat({ type: 'exhaustion', value: d20Malus });
+    }
     var swDef = bonuses.sacredWeapon;
     // Come il filtro subclass di classResources: un bonus con .subclass vale
     // solo per QUELLA sottoclasse, altrimenti Arma Sacra trapelerebbe anche a
@@ -631,15 +657,23 @@
       initiativeParts: buildParts([
         { type: 'ability', key: 'DES', value: mods.DES },
         { type: 'subclass', value: initBonus },
-        { type: 'other', value: initOther }
+        { type: 'other', value: initOther },
+        { type: 'exhaustion', value: d20Malus }
       ]),
       hasSteed: hasSteed,
       spellDc: spellDc,
       spellAttack: spellAttack,
+      // La cavalcatura usa il bonus di chi la evoca, ma il suo tiro non è indebolito.
+      spellAttackBase: spellAttackBase,
+      exhaustion: exhaustion,
+      exhaustionD20: d20Malus,
+      // Ranger, Instancabile (10° livello): scende anche col riposo breve.
+      exhaustionFallsOnShortRest: ch.classId === 'ranger' && ch.level >= 10,
       spellAttackParts: buildParts([
         { type: 'ability', key: spellAbility, value: mods[spellAbility] },
         { type: 'prof', value: pb },
-        { type: 'other', value: spellAttackOther }
+        { type: 'other', value: spellAttackOther },
+        { type: 'exhaustion', value: d20Malus }
       ]),
       spellAbility: spellAbility,
       spellAbilityModText: fmt(mods[spellAbility]),

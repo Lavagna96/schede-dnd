@@ -784,7 +784,14 @@
         nameSpan.textContent = atk.name || '—';
         nameTd.appendChild(nameSpan);
         var hitTd = document.createElement('td');
-        hitTd.textContent = atk.hit || '—';
+        // Bonus a testo libero: il malus si applica solo se è un numero secco.
+        var hitText = String(atk.hit || '').trim();
+        if (view.exhaustionD20 && /^[+−-]?\d+$/.test(hitText)) {
+          hitTd.className = 'custom-atk-hit-num';
+          hitTd.textContent = window.AppEngine.formatMod(parseInt(hitText.replace('−', '-'), 10) + view.exhaustionD20);
+        } else {
+          hitTd.textContent = hitText || '—';
+        }
         var dmgTd = document.createElement('td');
         dmgTd.textContent = atk.dmg || '—';
         row.appendChild(nameTd);

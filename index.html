@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=246">
+<link rel="stylesheet" href="css/styles.css?v=248">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -238,6 +238,18 @@
         <div class="hp-actions hp-actions-dh">
           <button type="button" class="pbtn dmg" id="hp-dmg-open"><svg class="hp-ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4v5l-9 7l-4 4l-3 -3l4 -4l7 -9z"/><path d="M6.5 11.5l6 6"/></svg> Danno</button>
           <button type="button" class="pbtn heal" id="hp-heal-open"><svg class="hp-ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.566"/><path d="M16 19h6"/><path d="M19 16v6"/></svg> Cura</button>
+        </div>
+        <button type="button" class="exh-add" id="exh-add">＋ Indebolimento</button>
+        <div class="exh-box hidden" id="exh-box">
+          <div class="exh-row">
+            <span class="exh-title">Indebolimento</span>
+            <div class="exh-step">
+              <button type="button" class="exh-btn" id="exh-down" aria-label="Diminuisci Indebolimento">−</button>
+              <span class="exh-level" id="exh-level" aria-label="Livello di Indebolimento">0</span>
+              <button type="button" class="exh-btn" id="exh-up" aria-label="Aumenta Indebolimento">+</button>
+            </div>
+          </div>
+          <div class="exh-effect" id="exh-effect" role="status"></div>
         </div>
       </div>
 
@@ -1059,37 +1071,38 @@
   <button type="button" class="app-menu-logout" id="menu-logout">Esci</button>
 </aside>
 
-<script src="js/firebase-config.js?v=246"></script>
-<script src="js/manual-55.js?v=246"></script>
-<script src="js/sources.js?v=246"></script>
-<script src="js/config.js?v=246"></script>
-<script src="js/storage.js?v=246"></script>
-<script src="js/engine.js?v=246"></script>
-<script src="js/hp-bar.js?v=246"></script>
-<script src="js/header.js?v=246"></script>
-<script src="js/stats.js?v=246"></script>
-<script src="js/traits.js?v=246"></script>
-<script src="js/sheet.js?v=246"></script>
-<script src="js/grimorio.js?v=246"></script>
-<script src="js/grimorio-advanced.js?v=246"></script>
-<script src="js/manual-browse.js?v=246"></script>
-<script src="js/treasury.js?v=246"></script>
-<script src="js/diary.js?v=246"></script>
-<script src="js/inspiration.js?v=246"></script>
-<script src="js/bottom-sheet.js?v=246"></script>
-<script src="js/edit-sheet.js?v=246"></script>
-<script src="js/items.js?v=246"></script>
-<script src="js/equip.js?v=246"></script>
-<script src="js/levelup.js?v=246"></script>
-<script src="js/dice-3d.js?v=246"></script>
-<script src="js/dice.js?v=246"></script>
-<script src="js/menu.js?v=246"></script>
-<script src="js/app.js?v=246"></script>
-<script src="js/faceid.js?v=246"></script>
-<script src="js/dashboard.js?v=246"></script>
-<script src="js/create.js?v=246"></script>
-<script src="js/portrait.js?v=246"></script>
-<script src="js/update-check.js?v=246"></script>
-<script type="module" src="js/cloud.js?v=246"></script>
+<script src="js/firebase-config.js?v=248"></script>
+<script src="js/manual-55.js?v=248"></script>
+<script src="js/sources.js?v=248"></script>
+<script src="js/config.js?v=248"></script>
+<script src="js/storage.js?v=248"></script>
+<script src="js/engine.js?v=248"></script>
+<script src="js/hp-bar.js?v=248"></script>
+<script src="js/header.js?v=248"></script>
+<script src="js/stats.js?v=248"></script>
+<script src="js/traits.js?v=248"></script>
+<script src="js/sheet.js?v=248"></script>
+<script src="js/grimorio.js?v=248"></script>
+<script src="js/grimorio-advanced.js?v=248"></script>
+<script src="js/manual-browse.js?v=248"></script>
+<script src="js/treasury.js?v=248"></script>
+<script src="js/diary.js?v=248"></script>
+<script src="js/inspiration.js?v=248"></script>
+<script src="js/exhaustion.js?v=248"></script>
+<script src="js/bottom-sheet.js?v=248"></script>
+<script src="js/edit-sheet.js?v=248"></script>
+<script src="js/items.js?v=248"></script>
+<script src="js/equip.js?v=248"></script>
+<script src="js/levelup.js?v=248"></script>
+<script src="js/dice-3d.js?v=248"></script>
+<script src="js/dice.js?v=248"></script>
+<script src="js/menu.js?v=248"></script>
+<script src="js/app.js?v=248"></script>
+<script src="js/faceid.js?v=248"></script>
+<script src="js/dashboard.js?v=248"></script>
+<script src="js/create.js?v=248"></script>
+<script src="js/portrait.js?v=248"></script>
+<script src="js/update-check.js?v=248"></script>
+<script type="module" src="js/cloud.js?v=248"></script>
 </body>
 </html>

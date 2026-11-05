@@ -35,6 +35,8 @@
   var CLICK_GUARD_MS = 500;
 
   var ICONS = {
+    exhaustion: '<path d="M5 3.5l7 6 7-6v4.2l-7 6-7-6zM5 10.5l7 6 7-6v4.2l-7 6-7-6z"/>',
+    jack: '<path d="M9 18.5a3 3 0 1 1-2-2.83V5.2l12-2.2v12.5a3 3 0 1 1-2-2.83V6.1L9 7.5z"/>',
     FOR: '<path d="M5 5h10l4 3.5-4 3.5H5z"/><path d="M9 12h3.4v9H9z"/>',
     DES: '<path d="M20.5 3.5C12 3.5 6 9 6 16l-2.5 4.5L8 18c7 0 12.5-6 12.5-14.5z"/>',
     COS: '<path d="M12 21C6 16 3 13 3 9a4.7 4.7 0 0 1 9-2 4.7 4.7 0 0 1 9 2c0 4-3 7-9 12z"/>',
@@ -108,6 +110,11 @@
   /* ---------- tiri disponibili ---------- */
 
   function buildRolls(view, ch) {
+    // Per i tiri di cui il motore non prepara il dettaglio.
+    function withExhaustion(parts) {
+      return view.exhaustionD20 ? parts.concat({ type: 'exhaustion', value: view.exhaustionD20 }) : parts;
+    }
+
     var labels = {};
     view.saves.forEach(function (s) {
       labels[s.key] = s.label;
@@ -116,7 +123,7 @@
       labels: labels,
       optionals: {
         guida: { label: 'Guida', die: 4, icon: 'guida' },
-        benedizione: { label: 'Benedizione', die: 4, icon: 'bless' },
+        benedizione: { label: 'Bene\u00ADdizione', die: 4, icon: 'bless' },
         armaSacra: { label: 'Arma Sacra', flat: view.sacredWeaponBonus, icon: 'sword' }
       },
       halflingLuck: view.halflingLuck,
@@ -135,7 +142,7 @@
       }].concat(view.abilities.map(function (a) {
         return {
           id: 'abil:' + a.key, kind: 'check', name: labels[a.key], sub: 'Prova di caratteristica',
-          abil: a.key, mark: '', parts: [{ type: 'ability', key: a.key, value: a.mod }], opts: []
+          abil: a.key, mark: '', parts: withExhaustion([{ type: 'ability', key: a.key, value: a.mod }]), opts: []
         };
       })),
       saves: view.saves.map(function (s) {
@@ -163,15 +170,15 @@
       });
     }
     // Attacchi personalizzati della scheda: il bonus è testo libero, si tira
-    // solo se contiene un numero.
+    // solo se comincia con un numero ("CD 15" è un tiro salvezza del bersaglio).
     (ch.customAttacks || []).forEach(function (atk, i) {
-      var hit = parseInt(String(atk.hit || '').replace('−', '-').replace(/[^\d+-]/g, ''), 10);
+      var hit = parseInt(String(atk.hit || '').trim().replace('−', '-'), 10);
       if (!atk.name || isNaN(hit)) {
         return;
       }
       out.attacks.push({
         id: 'custom:' + i + ':' + atk.name, kind: 'attack', name: atk.name, sub: 'Tiro per colpire',
-        abil: '', mark: '', parts: [{ type: 'other', label: 'Bonus d\'attacco', value: hit }],
+        abil: '', mark: '', parts: withExhaustion([{ type: 'other', label: 'Bonus d\'attacco', value: hit }]),
         opts: ['benedizione'], critFrom: view.weaponCritFrom
       });
     });
@@ -192,10 +199,16 @@
       return { label: rolls.labels[p.key], icon: p.key };
     }
     if (p.type === 'prof') {
-      return { label: 'Competenza', icon: 'prof' };
+      return { label: 'Compe\u00ADtenza', icon: 'prof' };
     }
     if (p.type === 'expertise') {
-      return { label: 'Competenza doppia', icon: 'expertise' };
+      return { label: 'Compe\u00ADtenza doppia', icon: 'expertise' };
+    }
+    if (p.type === 'exhaustion') {
+      return { label: 'Indebo\u00ADlimento', icon: 'exhaustion' };
+    }
+    if (p.type === 'jack') {
+      return { label: 'Tuttofare', icon: 'jack' };
     }
     if (p.type === 'aura') {
       return { label: 'Aura di Protezione', icon: 'aura' };
