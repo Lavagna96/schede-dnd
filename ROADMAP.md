@@ -9,7 +9,29 @@
 
 ## Dove siamo
 
-- **Ultimo aggiornamento:** 2026-10-30
+- **Ultimo aggiornamento:** 2026-11-05
+- **Nota di sessione (2026-11-05): Lancio dadi, prima versione (solo d20).**
+  Richiesta di Andrea: sezione nel menu laterale in stile Baldur's Gate 3
+  (stessa composizione e atmosfera, grafica ridisegnata da zero, nessun asset
+  del gioco; dietro al dado il ritratto del personaggio). Scelte: layout B
+  (si apre sull'ultimo tiro, il titolo apre il foglio di scelta), CD
+  facoltativa (senza CD solo il totale; aggiungendola dopo il tiro il verdetto
+  compare subito), cronologia solo locale (`localStorage`, 30 righe per
+  personaggio, mai sul cloud). File: `js/dice.js` (logica e interfaccia),
+  `js/dice-3d.js` (d20 in WebGL puro, nessuna libreria),
+  `css/components/dice.css`, voci `parts` in `js/engine.js` (additive: i totali
+  della scheda non cambiano). Regole verificate sul PDF: 20 e 1 naturali solo
+  sui tiri per colpire; Ispirazione Eroica e Fortuna dell'Halfling ritirano un
+  dado e il nuovo è obbligatorio (con vantaggio/svantaggio si ritira il più
+  basso); Talento Affidabile; Critico Migliorato/Superiore; Guida solo sulle
+  prove di abilità; Benedizione su tiri per colpire e salvezza. Verificato in
+  locale: carte = totali della scheda su tutte le classi, sottoclassi e livelli
+  (32.940 controlli), equità del d20 (chi-quadro 13 su 200.000 tiri, soglia
+  43,8), casi limite forzati, viewport 375×667/375×812/430×932.
+  **Da fare:** prova su iPhone reale; altri dadi (d4–d100) e danni con critico;
+  Ispirazione Bardica; suoni; tiro toccando un'abilità sulla scheda.
+  **Domanda aperta ad Andrea:** aggiungere anche alla scheda Jack of All Trades
+  e Indebolimento, che oggi il motore non calcola (e quindi nemmeno il dado).
 - **Nota di sessione (2026-10-30): bug slot incantesimo dal 3° livello in
   su** — segnalato da Andrea (Tharion al 9°: nel Grimorio mancava lo slot di
   3° livello). Causa: in `index.html` esistevano solo due card slot scritte
@@ -24,7 +46,7 @@
   salvato): Paladino 8 → 4/3, Paladino 9 → 4/3/2, Paladino 17 → 4/3/3/3/1,
   Mago 9 → 4/3/3/3/1, Warlock 5 → una card III 2/2, Barbaro → sezione
   nascosta; nessun duplicato a ri-render, console pulita. Cache busting
-  `?v=241`→`?v=242`. **Non ancora committato/deployato.**
+  `?v=241`→`?v=242`.
 - **Nota di sessione (2026-09-12, quarta parte): bonus di background
   spostato dentro la tabella Punteggi.** Richiesta diretta di Andrea: il
   riepilogo degli aumenti di background (+2/+1 o +1/+1/+1) stava in un
