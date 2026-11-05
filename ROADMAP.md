@@ -32,6 +32,22 @@
   1. Tirare i danni direttamente da un attacco (con i critici) o da un
      incantesimo (es. pulsante 8d6 sulla Palla di Fuoco).
 
+  **Liste incantesimi allineate al PHB (manuale `version: 57`, `?v=251`):** il
+  campo `classes` confrontato con il PDF (intestazione di ogni voce e "Spell List"
+  di classe) per tutti i 391 incantesimi. Tolti 80 tag in più: venivano dalle
+  tabelle di sottoclasse e davano a tutta la classe incantesimi che spettano solo
+  a quella sottoclasse (es. Palla di Fuoco a ogni warlock). Gli incantesimi di
+  sottoclasse restano sempre preparati: arrivano dalle tabelle, non da `classes`.
+  Sparito il chip "Ladro" dal Manuale (mostrava solo Mano Magica). Uniti 14
+  doppioni, una voce per incantesimo, completata sul PDF dove serviva;
+  `spellAliases` e `migrateSpellIds` (`js/storage.js`) riportano i vecchi id dei
+  personaggi salvati a quello rimasto. Corrette le scuole sbagliate. I 19
+  incantesimi di Heroes of Faerûn combaciano già con il loro PDF. **Debito aperto:**
+  su Firestore restano i 14 documenti vecchi in `manuals/5.5/spells`, perché il sync
+  scrive senza cancellare. L'app non li legge: da eliminare solo su decisione di
+  Andrea. Chi aveva già preparato un incantesimo non suo lo conserva finché non lo
+  toglie.
+
   **Slot del patto del Warlock (corretto):** il PHB ridà tutti gli slot di Magia
   del Patto a ogni riposo breve o lungo, l'app li ricaricava solo col lungo e
   diceva "recupero: riposo lungo". Ora recupero e dicitura sono giusti. La sezione

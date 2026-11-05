@@ -263,7 +263,7 @@
     if (table) { return table[level] || 0; }
     if (def.abilityMod && mods) {
       // from: la risorsa scalata da caratteristica può comunque partire da un
-      // certo livello (es. Passo Fatato Libero del Vagabondo Fatato, dal 15°
+      // certo livello (es. Passo nella Nebbia Libero del Vagabondo Fatato, dal 15°
       // — a differenza dell'Ispirazione Bardica, sempre attiva dal 1°).
       if (def.from && level < def.from) { return 0; }
 

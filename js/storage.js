@@ -238,6 +238,25 @@
     return out;
   }
 
+  /* Un personaggio salvato può avere id di incantesimi che nel manuale non
+     esistono più perché erano doppioni: li riporta all'id rimasto, senza
+     lasciare ripetizioni. Da qui passano localStorage, cloud e import. */
+  function migrateSpellIds(grimoire) {
+    var aliases = (window.MANUAL_55 && window.MANUAL_55.spellAliases) || {};
+    ['prepared', 'cantrips', 'always'].forEach(function (key) {
+      if (!Array.isArray(grimoire[key])) {
+        return;
+      }
+      grimoire[key] = grimoire[key].map(function (id) {
+        return aliases[id] || id;
+      }).filter(function (id, i, list) {
+        return list.indexOf(id) === i;
+      });
+    });
+
+    return grimoire;
+  }
+
   function fromSavedV2(parsed, def) {
     var base = def || getBaseState();
     var next = deepClone(base);
@@ -258,7 +277,7 @@
     if (parsed.deathSaves) {
       next.deathSaves = Object.assign(deepClone(base.deathSaves), parsed.deathSaves);
     }
-    next.grimoire = Object.assign(deepClone(base.grimoire), parsed.grimoire || {});
+    next.grimoire = migrateSpellIds(Object.assign(deepClone(base.grimoire), parsed.grimoire || {}));
 
     return next;
   }
