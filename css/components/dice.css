@@ -114,6 +114,8 @@
 /* ---------- cornice ---------- */
 
 .dice-frame-host {
+  position: relative;
+  z-index: 5; /* il dado afferrato passa sopra carte e pulsanti */
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
@@ -196,10 +198,22 @@
   width: 280px;
   height: 280px;
   z-index: 2;
-  cursor: pointer;
-  touch-action: manipulation;
+  cursor: grab;
+  touch-action: none; /* il gesto di lancio lo gestisce js/dice.js */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   outline: none;
+}
+
+.dice-view.dice-grabbing .dice-canvas {
+  cursor: grabbing;
+}
+
+.dice-view.dice-grabbing .dice-total.show,
+.dice-view.dice-grabbing .dice-verdict.show {
+  opacity: 0;
 }
 
 /* Solo se WebGL manca: il numero al posto del dado. */

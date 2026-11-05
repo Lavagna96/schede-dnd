@@ -19,6 +19,20 @@
   var FRAME_H = 416;
   var FRAME_SCALE_MAX = 1.2;
   var SHEET_CLOSE_DRAG = 80;
+  // Gesto di lancio: sotto TAP_PX è un tocco; oltre, la velocità negli ultimi
+  // FLING_WINDOW_MS decide fra tiro (px/ms >= FLING_SPEED) e dado posato.
+  var TAP_PX = 10;
+  var FLING_WINDOW_MS = 90;
+  var FLING_SPEED = 0.35;
+  var FLING_SPEED_MAX = 2.5;
+  var FLING_LEAD_PX_MAX = 150;
+  var FLING_LEAD_MS = 110;
+  var FLING_HOME_MS = 620;
+  var DROP_HOME_MS = 280;
+  var HOME_VIA_OFFSET = 0.32;
+  var DROP_VIA = 0.2;
+  // Con il mouse un trascinamento finisce comunque in un click da ignorare.
+  var CLICK_GUARD_MS = 500;
 
   var ICONS = {
     FOR: '<path d="M5 5h10l4 3.5-4 3.5H5z"/><path d="M9 12h3.4v9H9z"/>',
@@ -65,6 +79,9 @@
   var optCharId = null;
   var pickerTab = 'skills';
   var runToken = 0;       // invalida animazioni e timer di un tiro superato
+  var drag = null;        // dito sul dado
+  var homeFlight = null;  // animazione del rientro al centro
+  var lastDragEnd = 0;
   var isOpen = false;
   var clearArmed = false;
 
@@ -438,7 +455,8 @@
 
   /* ---------- il tiro ---------- */
 
-  function throwNew() {
+  // fling: verso e forza del gesto, cambiano solo l'animazione.
+  function throwNew(fling) {
     if (phase === 'rolling') {
       return;
     }
@@ -462,7 +480,128 @@
       if (token === runToken) {
         reveal(token);
       }
-    });
+    }, undefined, fling);
+  }
+
+  /* ---------- gesto di lancio ---------- */
+
+  function frameScale() {
+    return parseFloat(el('dice-view').style.getPropertyValue('--dice-scale')) || 1;
+  }
+
+  function setDiceOffset(x, y) {
+    el('dice-canvas').style.transform = x || y ? 'translate(' + x + 'px,' + y + 'px)' : '';
+  }
+
+  // Il dado torna al centro passando per un punto: lo slancio del lancio,
+  // o un breve assestamento quando viene posato.
+  function flyHome(x, y, viaX, viaY, ms) {
+    var canvas = el('dice-canvas');
+    setDiceOffset(0, 0);
+    if (!canvas.animate || window.AppDice3D.isReducedMotion()) {
+      return;
+    }
+    homeFlight = canvas.animate([
+      { transform: 'translate(' + x + 'px,' + y + 'px)' },
+      { transform: 'translate(' + viaX + 'px,' + viaY + 'px)', offset: HOME_VIA_OFFSET },
+      { transform: 'translate(0,0)' }
+    ], { duration: ms, easing: 'ease-out' });
+  }
+
+  // Tiene solo gli ultimi campioni: il primo è il più recente già fuori finestra.
+  // Usa l'istante del tocco, non quello di elaborazione: se la pagina rallenta
+  // un lancio veloce non deve sembrare un dado posato.
+  function addDragSample(e) {
+    var now = e.timeStamp;
+    drag.samples.push({ x: e.clientX, y: e.clientY, t: now });
+    while (drag.samples.length > 2 && now - drag.samples[1].t >= FLING_WINDOW_MS) {
+      drag.samples.shift();
+    }
+  }
+
+  function dragVelocity() {
+    var first = drag.samples[0];
+    var last = drag.samples[drag.samples.length - 1];
+    var dt = Math.max(1, last.t - first.t);
+
+    return { vx: (last.x - first.x) / dt, vy: (last.y - first.y) / dt };
+  }
+
+  function onDragStart(e) {
+    if (drag || phase === 'rolling' || !e.isPrimary || e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
+    var canvas = el('dice-canvas');
+    if (homeFlight) {
+      homeFlight.cancel();
+      homeFlight = null;
+    }
+    if (canvas.setPointerCapture) {
+      canvas.setPointerCapture(e.pointerId);
+    }
+    drag = {
+      id: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY,
+      offsetX: 0, offsetY: 0, moved: 0, samples: []
+    };
+    addDragSample(e);
+    window.AppDice3D.grab();
+  }
+
+  function onDragMove(e) {
+    if (!drag || e.pointerId !== drag.id) {
+      return;
+    }
+    var scale = frameScale();
+    window.AppDice3D.dragBy(e.clientX - drag.lastX, e.clientY - drag.lastY);
+    drag.lastX = e.clientX;
+    drag.lastY = e.clientY;
+    drag.offsetX = (e.clientX - drag.startX) / scale;
+    drag.offsetY = (e.clientY - drag.startY) / scale;
+    drag.moved = Math.max(drag.moved, Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY));
+    addDragSample(e);
+    setDiceOffset(drag.offsetX, drag.offsetY);
+    // Totale e verdetto si fanno da parte, ma tornano se il dado viene posato.
+    if (drag.moved >= TAP_PX) {
+      el('dice-view').classList.add('dice-grabbing');
+    }
+  }
+
+  function onDragEnd(e) {
+    if (!drag || e.pointerId !== drag.id) {
+      return;
+    }
+    addDragSample(e);
+    var ended = drag;
+    var velocity = dragVelocity();
+    var speed = Math.hypot(velocity.vx, velocity.vy);
+    drag = null;
+    lastDragEnd = performance.now();
+    el('dice-view').classList.remove('dice-grabbing');
+    window.AppDice3D.release();
+
+    if (ended.moved < TAP_PX) {
+      setDiceOffset(0, 0);
+      throwNew();
+    } else if (speed >= FLING_SPEED) {
+      var lead = Math.min(FLING_LEAD_PX_MAX, speed * FLING_LEAD_MS) / frameScale() / speed;
+      flyHome(ended.offsetX, ended.offsetY,
+        ended.offsetX + velocity.vx * lead, ended.offsetY + velocity.vy * lead, FLING_HOME_MS);
+      throwNew({ vx: velocity.vx, vy: velocity.vy, power: Math.min(1, speed / FLING_SPEED_MAX) });
+    } else {
+      flyHome(ended.offsetX, ended.offsetY, ended.offsetX * DROP_VIA, ended.offsetY * DROP_VIA, DROP_HOME_MS);
+    }
+  }
+
+  // Il sistema si è preso il tocco, o la schermata si sta chiudendo.
+  function cancelDrag() {
+    if (!drag) {
+      return;
+    }
+    drag = null;
+    el('dice-view').classList.remove('dice-grabbing');
+    setDiceOffset(0, 0);
+    window.AppDice3D.release();
   }
 
   // Durante il volo i dadi facoltativi non mostrano ancora il loro valore.
@@ -825,6 +964,7 @@
   }
 
   function close() {
+    cancelDrag();
     runToken++;
     phase = 'idle';
     isOpen = false;
@@ -845,14 +985,27 @@
         openSheet();
       }
     });
-    el('dice-canvas').addEventListener('click', throwNew);
+    el('dice-canvas').addEventListener('pointerdown', onDragStart);
+    el('dice-canvas').addEventListener('pointermove', onDragMove);
+    el('dice-canvas').addEventListener('pointerup', onDragEnd);
+    el('dice-canvas').addEventListener('pointercancel', function (e) {
+      if (drag && e.pointerId === drag.id) {
+        cancelDrag();
+      }
+    });
+    // Resta per chi attiva il dado senza dito sullo schermo (VoiceOver).
+    el('dice-canvas').addEventListener('click', function () {
+      if (performance.now() - lastDragEnd > CLICK_GUARD_MS) {
+        throwNew();
+      }
+    });
     el('dice-canvas').addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         throwNew();
       }
     });
-    el('dice-act-again').addEventListener('click', throwNew);
+    el('dice-act-again').addEventListener('click', function () { throwNew(); });
     el('dice-act-insp').addEventListener('click', function () { reroll('inspiration'); });
     el('dice-act-luck').addEventListener('click', function () { reroll('luck'); });
     el('dice-sheet-overlay').addEventListener('click', closeSheet);

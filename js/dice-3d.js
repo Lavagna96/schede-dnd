@@ -11,6 +11,15 @@
   var THROW_MS_REDUCED = 300;
   var FADE_MS = 260;
   var CAMERA_DIST = 4.6;
+  // Dado afferrato col dito (js/dice.js): rotazione per pixel, ingrandimento,
+  // rientro morbido quando viene posato senza tirare.
+  var GRAB_ROTATION = 0.011;
+  var GRAB_SCALE = 1.08;
+  var GRAB_BACK_MS = 280;
+  // Scagliato: giri in più in base alla forza, nel verso del dito.
+  var FLING_SPIN_BASE = 13;
+  var FLING_SPIN_POWER = 12;
+  var FLING_AXIS_TILT = 0.15;
   // Una sola scala per un dado, una più piccola per la coppia di vantaggio/svantaggio.
   var SINGLE = { x: 0, scale: 0.84 };
   var PAIR = [{ x: -0.72, scale: 0.62 }, { x: 0.72, scale: 0.62 }];
@@ -369,6 +378,25 @@
   }
 
   function poseOf(d, now) {
+    if (d.held) {
+      return { q: d.held, y: 0, scale: d.scale * GRAB_SCALE };
+    }
+    var pose = freePose(d, now);
+    if (d.back) {
+      var k = (now - d.back.t0) / GRAB_BACK_MS;
+      if (k >= 1) {
+        d.back = null;
+      } else {
+        var eased = 1 - Math.pow(1 - Math.max(0, k), 3);
+        pose.q = quatLerp(d.back.from, pose.q, eased);
+        pose.scale *= 1 + (GRAB_SCALE - 1) * (1 - eased);
+      }
+    }
+
+    return pose;
+  }
+
+  function freePose(d, now) {
     if (d.idle) {
       if (reducedMotion) {
         return { q: d.target, y: 0, scale: d.scale };
@@ -417,7 +445,9 @@
   }
 
   function isAnimating() {
-    return !!pending || !!fade || (!reducedMotion && dice.some(function (d) { return d.idle; }));
+    return !!pending || !!fade || dice.some(function (d) {
+      return d.held || d.back || (d.idle && !reducedMotion);
+    });
   }
 
   function tick(now) {
@@ -490,9 +520,46 @@
     kick();
   }
 
+  // Il dito prende il dado così com'è in quel momento.
+  function grab() {
+    dice.forEach(function (d) {
+      d.held = d.pose || d.target;
+      d.back = null;
+    });
+    kick();
+  }
+
+  // Trascinando, il dado rotola sotto il dito (dx, dy in pixel di schermo).
+  function dragBy(dx, dy) {
+    var len = Math.hypot(dx, dy);
+    if (!len) {
+      return;
+    }
+    var turn = quatAxis([dy / len, dx / len, 0], len * GRAB_ROTATION);
+    dice.forEach(function (d) {
+      if (d.held) {
+        d.held = quatMul(turn, d.held);
+      }
+    });
+  }
+
+  // Il dito lascia il dado: torna morbido alla posa di prima, senza tirare.
+  function release() {
+    var now = performance.now();
+    dice.forEach(function (d) {
+      if (d.held) {
+        d.back = { from: d.held, t0: now };
+        d.held = null;
+      }
+    });
+    kick();
+  }
+
   /* values: i d20 estratti; keep: indice di quello che conta; only: se
-     presente, si anima solo quel dado (ritiro di uno dei due). */
-  function throwDice(values, keep, done, only) {
+     presente, si anima solo quel dado (ritiro di uno dei due); fling: se
+     presente, verso e forza del gesto { vx, vy, power } cambiano solo
+     l'animazione, il numero è già deciso. */
+  function throwDice(values, keep, done, only, fling) {
     var now = performance.now();
     var reduced = reducedMotion;
     var total = reduced ? THROW_MS_REDUCED : THROW_MS;
@@ -516,6 +583,12 @@
       d.axis2 = randomAxis();
       d.spin1 = (Math.random() < 0.5 ? -1 : 1) * (15 + Math.random() * 6);
       d.spin2 = (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 5);
+      if (fling) {
+        var speed = Math.hypot(fling.vx, fling.vy);
+        d.axis1 = norm([fling.vy / speed, fling.vx / speed, FLING_AXIS_TILT]);
+        // L'angolo scende verso zero: col segno negativo gira nel verso del dito.
+        d.spin1 = -(FLING_SPIN_BASE + FLING_SPIN_POWER * fling.power);
+      }
       longest = Math.max(longest, stagger * 90 + d.dur);
 
       return d;
@@ -537,6 +610,9 @@
     stop: stop,
     setIdle: setIdle,
     throwDice: throwDice,
+    grab: grab,
+    dragBy: dragBy,
+    release: release,
     redraw: kick,
     isReducedMotion: function () { return reducedMotion; }
   };
