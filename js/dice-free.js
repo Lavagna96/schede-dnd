@@ -2,7 +2,10 @@
   /* Tiro libero del Lancio dadi: quali dadi tirare, quanti e con quale bonus
      (es. 8d6 per una Palla di Fuoco). Qui stanno la scelta, i recenti e il
      conteggio; palco, gesto e fasi del tiro restano in js/dice.js, che passa
-     da `host` ciò che serve. La scelta resta sul dispositivo, mai sul cloud. */
+     da `host` ciò che serve. La scelta resta sul dispositivo, mai sul cloud.
+
+     Da qui passano anche i danni di attacchi e incantesimi: stessi dadi, ma con
+     una scelta temporanea che non tocca né quella salvata né i recenti. */
 
   var TYPES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
   var SIDES = { d4: 4, d6: 6, d8: 8, d10: 10, d12: 12, d20: 20 };
@@ -26,6 +29,13 @@
   var counts = {};
   var bonus = 0;
   var recents = [];
+  var temporary = false;
+
+  /* Parole dopo i dadi nel testo di un incantesimo. */
+  var DAMAGE_WORD = /\b(fuoco|freddo|acido|tuono|fulmine|forza|necrotici|necrotico|radiosi|radioso|psichici|psichico|veleno|contundenti|perforanti|taglienti|danni)\b/;
+  var HEAL_WORD = /recuper|\bcura\b/;
+  var CANTRIP_TIERS = [5, 11, 17];
+  var MAX_SLOT_LEVEL = 9;
 
   function el(id) {
     return document.getElementById(id);
@@ -66,10 +76,14 @@
   }
 
   function save() {
+    if (temporary) {
+      return;
+    }
     host.writeJson('free', { counts: counts, bonus: bonus, recents: recents });
   }
 
   function load() {
+    temporary = false;
     var saved = host.readJson('free', null) || {};
     counts = cleanCounts(saved.counts);
     bonus = cleanBonus(saved.bonus);
@@ -159,6 +173,9 @@
 
   // Dopo un tiro riuscito la combinazione va in cima ai recenti, senza doppioni.
   function remember() {
+    if (temporary) {
+      return;
+    }
     var key = formulaOf(counts, bonus);
     recents = recents.filter(function (r) { return formulaOf(r.counts, r.bonus) !== key; });
     recents.unshift({ counts: Object.assign({}, counts), bonus: bonus });
@@ -196,6 +213,162 @@
     save();
   }
 
+  /* ---------- danni: dai testi della scheda e del manuale ai dadi ---------- */
+
+  function useTemporary(cfg) {
+    temporary = true;
+    counts = cleanCounts(cfg.counts);
+    bonus = cleanBonus(cfg.bonus);
+  }
+
+  function typeOfSides(sides) {
+    var t = 'd' + sides;
+
+    return TYPES.indexOf(t) !== -1 ? t : null;
+  }
+
+  /* "1d8+6 tagl." → { counts, bonus, type }. Null se non ci sono dadi che
+     sappiamo tirare: gli attacchi sono testo libero. */
+  function parseDamage(text) {
+    var source = String(text || '').replace(/−/g, '-');
+    var parsed = emptyCounts();
+    var found = false;
+    var valid = true;
+    var rest = source.replace(/(\d+)\s*d\s*(\d+)/gi, function (m, n, sides) {
+      var t = typeOfSides(sides);
+      if (t) {
+        parsed[t] += parseInt(n, 10);
+        found = true;
+      } else {
+        valid = false;
+      }
+
+      return ' ';
+    });
+    if (!found || !valid || diceIn(parsed) > MAX_DICE) {
+      return null;
+    }
+    var flat = 0;
+    rest = rest.replace(/([+-])\s*(\d+)/g, function (m, sign, n) {
+      flat += (sign === '-' ? -1 : 1) * parseInt(n, 10);
+
+      return ' ';
+    });
+
+    return { counts: parsed, bonus: cleanBonus(flat), type: rest.replace(/[+-]/g, ' ').replace(/\s+/g, ' ').trim() };
+  }
+
+  // Critico: si raddoppiano i dadi, non i modificatori. Null se non ci stanno.
+  function criticalOf(damage) {
+    var out = emptyCounts();
+    TYPES.forEach(function (t) {
+      out[t] = damage.counts[t] * 2;
+    });
+
+    return diceIn(out) > MAX_DICE ? null : { counts: out, bonus: damage.bonus, type: damage.type };
+  }
+
+  function formulaText(cfg) {
+    return formulaOf(cfg.counts, cfg.bonus);
+  }
+
+  function currentFormula() {
+    return formulaOf(counts, bonus);
+  }
+
+  /* Dadi di un incantesimo dal suo testo: la prima formula è la base, "+1d6 per
+     ogni slot oltre il 3°" la fa salire. A volte non è quella giusta: per
+     questo sul palco c'è sempre "Modifica dadi". */
+  function spellRoll(spell, view) {
+    var desc = spell.desc || '';
+    var first = /(\d+)d(\d+)(?:\s*\+\s*(\d+)(?!\s*d))?/.exec(desc);
+    if (!first || !typeOfSides(first[2])) {
+      return null;
+    }
+    var up = /(\d+)d(\d+)(?:(?!\d+d\d)[^.]){0,30}per ogni slot oltre il (\d)°/.exec(desc);
+    if (up && (up.index <= first.index || !typeOfSides(up[2]))) {
+      return null;
+    }
+    var after = desc.slice(first.index + first[0].length, first.index + first[0].length + 40).toLowerCase();
+    var before = desc.slice(Math.max(0, first.index - 40), first.index).toLowerCase();
+    var base = parseInt(first[1], 10);
+    var flat = first[3] ? parseInt(first[3], 10) : 0;
+    if (/^\s*\+\s*mod/.test(after)) {
+      flat += view.mods[view.spellAbility] || 0;
+    }
+    if (spell.level === 0 && /sale a \d+d\d+/.test(desc)) {
+      base *= 1 + CANTRIP_TIERS.filter(function (l) { return view.level >= l; }).length;
+    }
+
+    var slots = [spell.level];
+    if (up) {
+      var owned = [];
+      for (var lvl = spell.level; lvl <= MAX_SLOT_LEVEL; lvl++) {
+        if (view.resources.some(function (r) { return r.key === 'sl' + lvl && r.max > 0; })) {
+          owned.push(lvl);
+        }
+      }
+      slots = owned.length ? owned : slots;
+    }
+    var word = DAMAGE_WORD.exec(after);
+    var isHeal = !word && HEAL_WORD.test(before + after);
+
+    return {
+      slots: slots,
+      label: isHeal ? 'CURA' : (word ? 'DANNI' : 'TOTALE'),
+      type: word && word[1] !== 'danni' ? word[1] : '',
+      half: !!word && desc.indexOf('metà') !== -1,
+      configFor: function (slot) {
+        var cfg = { counts: emptyCounts(), bonus: flat };
+        cfg.counts[typeOfSides(first[2])] = base;
+        if (up) {
+          var steps = Math.max(0, slot - parseInt(up[3], 10));
+          cfg.counts[typeOfSides(up[2])] += parseInt(up[1], 10) * steps;
+        }
+
+        return diceIn(cfg.counts) > MAX_DICE ? null : cfg;
+      }
+    };
+  }
+
+  /* Riquadro nel dettaglio dell'incantesimo: slot usato (se fa salire i dadi)
+     e pulsante del tiro. Null se dal testo non si ricavano dadi. */
+  function spellBlock(spell, view, onRoll) {
+    var info = spellRoll(spell, view);
+    if (!info || !info.configFor(info.slots[0])) {
+      return null;
+    }
+    var box = document.createElement('div');
+    box.className = 'sheet-roll';
+    var index = 0;
+
+    function render() {
+      var slot = info.slots[index];
+      var cfg = info.configFor(slot);
+      box.textContent = '';
+      if (info.slots.length > 1) {
+        var label = document.createElement('span');
+        label.className = 'dice-free-lab';
+        label.textContent = 'Slot usato';
+        box.appendChild(buildRow(label, stepper('slot', slot + '°', index < info.slots.length - 1 && !!info.configFor(info.slots[index + 1]), index > 0, function (delta) {
+          index += delta;
+          render();
+        })));
+      }
+      var go = document.createElement('button');
+      go.type = 'button';
+      go.className = 'dice-free-main dice-btn';
+      go.textContent = 'Tira ' + formulaText(cfg);
+      go.addEventListener('click', function () {
+        onRoll(info, slot, cfg);
+      });
+      box.appendChild(go);
+    }
+    render();
+
+    return box;
+  }
+
   /* ---------- pannello sul palco ---------- */
 
   function recentButton(r, index) {
@@ -218,7 +391,8 @@
     });
   }
 
-  function showBreakdown(r) {
+  // note: riga in più sotto i dadi (es. la metà per chi supera il tiro salvezza).
+  function showBreakdown(r, note) {
     var box = el('dice-free-break');
     box.textContent = '';
     box.classList.remove('hint');
@@ -237,6 +411,12 @@
       b.textContent = 'bonus';
       box.appendChild(b);
       box.appendChild(document.createTextNode(' ' + window.AppEngine.formatMod(r.bonus)));
+    }
+    if (note) {
+      var line = document.createElement('b');
+      line.className = 'dice-free-note';
+      line.textContent = note;
+      box.appendChild(line);
     }
   }
 
@@ -361,6 +541,13 @@
     },
     load: load,
     formula: formula,
+    currentFormula: currentFormula,
+    formulaText: formulaText,
+    useTemporary: useTemporary,
+    parseDamage: parseDamage,
+    criticalOf: criticalOf,
+    spellRoll: spellRoll,
+    spellBlock: spellBlock,
     isEmpty: isEmpty,
     specs: specs,
     roll: roll,

@@ -965,3 +965,33 @@
   margin: 12px 4px 4px;
 }
 
+/* ---------- danni di attacchi e incantesimi ---------- */
+
+.dice-view.dice-has-ctx .dice-free-recent-wrap {
+  display: none;
+}
+
+.dice-free-note {
+  display: block;
+  margin-top: 2px;
+}
+
+/* Nel dettaglio dell'incantesimo: il foglio sta fuori da .dice-view. */
+.sheet-roll {
+  --dice-gold-pale: #e9d9a8;
+  --dice-ink: #fbf6ea;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(201, 164, 67, 0.25);
+}
+
+.sheet-roll .dice-free-row {
+  border-bottom: 0;
+  margin-bottom: 6px;
+}
+
+.sheet-roll .dice-free-main.dice-btn {
+  display: block;
+  width: 100%;
+}
+

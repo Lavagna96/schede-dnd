@@ -96,6 +96,7 @@
   var isOpen = false;
   var clearArmed = false;
   var renderedTab = null;
+  var damageCtx = null;   // danni in corso: da dove arrivano e come tornarci
 
   function isFree() {
     return current === FREE_ROLL;
@@ -173,7 +174,8 @@
         id: 'weapon', kind: 'attack', name: view.weapon.name, sub: 'Tiro per colpire',
         abil: view.weapon.hitParts[0].key, mark: 'p', parts: view.weapon.hitParts,
         opts: view.sacredWeaponBonus > 0 ? ['benedizione', 'armaSacra'] : ['benedizione'],
-        critFrom: view.weaponCritFrom
+        critFrom: view.weaponCritFrom,
+        damage: window.AppDiceFree.parseDamage(view.weapon.dmgText)
       });
     }
     var isCaster = view.resources.some(function (r) { return /^sl\d$/.test(r.key); });
@@ -193,7 +195,8 @@
       out.attacks.push({
         id: 'custom:' + i + ':' + atk.name, kind: 'attack', name: atk.name, sub: 'Tiro per colpire',
         abil: '', mark: '', parts: withExhaustion([{ type: 'other', label: 'Bonus d\'attacco', value: hit }]),
-        opts: ['benedizione'], critFrom: view.weaponCritFrom
+        opts: ['benedizione'], critFrom: view.weaponCritFrom,
+        damage: window.AppDiceFree.parseDamage(atk.dmg)
       });
     });
 
@@ -261,8 +264,8 @@
     var history = readJson('history', []);
     var entry = isFree() ? {
       t: result.t,
-      name: window.AppDiceFree.formula(),
-      sub: FREE_ROLL.sub,
+      name: damageCtx ? damageCtx.title : window.AppDiceFree.formula(),
+      sub: damageCtx ? damageCtx.historySub : FREE_ROLL.sub,
       detail: window.AppDiceFree.detailText(result.free),
       total: result.free.total,
       kind: 'free',
@@ -470,10 +473,11 @@
     renderCards();
     if (isFree()) {
       window.AppDice3D.setIdle(window.AppDiceFree.specs());
-      el('dice-name').textContent = window.AppDiceFree.formula();
-      el('dice-sub').textContent = FREE_ROLL.sub;
+      el('dice-name').textContent = damageCtx ? damageCtx.title : window.AppDiceFree.formula();
+      el('dice-sub').textContent = damageCtx ? damageCtx.subFor(window.AppDiceFree.currentFormula()) : FREE_ROLL.sub;
       setFreeTotal(null);
       window.AppDiceFree.renderPanel();
+      renderFreeButtons(false);
     } else {
       window.AppDice3D.setIdle(adv ? 2 : 1);
     }
@@ -483,6 +487,89 @@
   function setFreeTotal(total) {
     el('dice-cd-num').textContent = total == null ? '—' : total;
     el('dice-cd-num').setAttribute('aria-label', total == null ? 'Nessun totale' : 'Totale ' + total);
+  }
+
+  function renderFreeButtons(rolled) {
+    var back = el('dice-free-back');
+    back.classList.toggle('hidden', !damageCtx);
+    back.textContent = damageCtx ? damageCtx.backLabel : '';
+    el('dice-free-change').textContent = damageCtx ? 'Modifica dadi' : 'Cambia dadi';
+    el('dice-free-roll').textContent = damageCtx && rolled ? 'Ritira' : 'Lancia';
+  }
+
+  function leaveDamage() {
+    if (damageCtx) {
+      damageCtx = null;
+      window.AppDiceFree.load();
+    }
+    el('dice-view').classList.remove('dice-has-ctx');
+  }
+
+  /* Danni di un attacco o di un incantesimo: stesso palco del tiro libero, con
+     dadi temporanei già impostati. Non cambiano l'ultimo tiro né i recenti. */
+  function enterDamage(ctx, cfg) {
+    damageCtx = ctx;
+    window.AppDiceFree.useTemporary(cfg);
+    current = FREE_ROLL;
+    adv = 0;
+    cd = null;
+    el('dice-view').classList.add('dice-is-free', 'dice-has-ctx');
+    el('dice-cd-label').textContent = ctx.label;
+    resetStage();
+    fitFrame();
+  }
+
+  // Il danno si offre dopo un colpo o finché il DM non ha detto la CA.
+  function damageFor(outcome) {
+    if (!current.damage || outcome === 'miss') {
+      return null;
+    }
+
+    return outcome === 'crit' ? window.AppDiceFree.criticalOf(current.damage) : current.damage;
+  }
+
+  function startWeaponDamage() {
+    var outcome = computeOutcome();
+    var cfg = damageFor(outcome);
+    if (phase !== 'done' || !cfg) {
+      return;
+    }
+    var isCrit = outcome === 'crit';
+    var type = cfg.type ? ' ' + cfg.type : '';
+    var saved = { roll: current, result: result, cd: cd, adv: adv };
+    enterDamage({
+      title: current.name,
+      label: isCrit ? 'DANNI CRITICI' : 'DANNI',
+      historySub: isCrit ? 'Danni critici' : 'Danni',
+      backLabel: '‹ Attacco',
+      subFor: function (formula) {
+        return (isCrit ? 'Danni critici: ' : 'Danni: ') + formula + type;
+      },
+      back: function () { restoreAttack(saved); }
+    }, cfg);
+    throwNew();
+  }
+
+  // Torna all'attacco esattamente com'era: stesso d20, totale e verdetto.
+  function restoreAttack(saved) {
+    runToken++;
+    leaveDamage();
+    el('dice-view').classList.remove('dice-is-free');
+    current = saved.roll;
+    result = saved.result;
+    cd = saved.cd;
+    adv = saved.adv;
+    phase = 'done';
+    el('dice-name').textContent = current.name;
+    el('dice-sub').textContent = current.sub;
+    el('dice-cd-label').innerHTML = current.kind === 'attack' ? 'CLASSE<br>ARMATURA' : 'CLASSE<br>DIFFICOLTÀ';
+    renderCd();
+    renderAdv();
+    el('dice-hint').classList.add('off');
+    renderCards();
+    window.AppDice3D.setResult(result.d20s, keptIndex(result.d20s, result.adv));
+    showVerdict();
+    fitFrame();
   }
 
   function setFree() {
@@ -497,6 +584,7 @@
   }
 
   function setRoll(roll) {
+    leaveDamage();
     current = roll;
     adv = 0;
     cd = null;
@@ -573,7 +661,9 @@
       setFreeTotal(rolled.total);
       free.remember();
       free.renderPanel();
-      free.showBreakdown(rolled);
+      free.showBreakdown(rolled, damageCtx && damageCtx.half
+        ? 'Se superano il TS: ' + Math.floor(rolled.total / 2) : '');
+      renderFreeButtons(true);
       el('dice-status').textContent = 'Totale ' + rolled.total;
       recordHistory();
     }, undefined, fling);
@@ -830,7 +920,14 @@
     var insp = canImprove && hasInspiration();
     el('dice-act-luck').classList.toggle('hidden', !luck);
     el('dice-act-insp').classList.toggle('hidden', !insp);
-    el('dice-act-insp').textContent = luck ? '★ Ispirazione' : '★ Ritira con Ispirazione';
+    // Con i danni i pulsanti sono tre: i testi si accorciano per starci.
+    var damage = damageFor(outcome);
+    el('dice-act-damage').classList.toggle('hidden', !damage);
+    if (damage) {
+      el('dice-act-damage').textContent = 'Tira danni · ' + window.AppDiceFree.formulaText(damage);
+    }
+    el('dice-act-insp').textContent = luck || damage ? '★ Ispirazione' : '★ Ritira con Ispirazione';
+    el('dice-act-again').textContent = damage ? 'Di nuovo' : 'Tira di nuovo';
     el('dice-actions').classList.add('show');
   }
 
@@ -1126,23 +1223,30 @@
     markRollable();
   }
 
+  // Dal dettaglio di un incantesimo nel Grimorio: si tira subito.
+  function openSpellRoll(spell, info, slot, cfg) {
+    prepareOpen();
+    var type = info.type ? ' ' + info.type : '';
+    var slotText = info.slots.length > 1 ? ' · slot ' + slot + '°' : '';
+    enterDamage({
+      title: spell.name,
+      label: info.label,
+      historySub: info.label === 'DANNI' ? 'Danni' : (info.label === 'CURA' ? 'Cura' : 'Incantesimo'),
+      backLabel: '‹ Incantesimo',
+      half: info.half,
+      subFor: function (formula) {
+        return formula + type + slotText;
+      },
+      back: function () {
+        close();
+        window.AppGrimorio.openDetail(spell);
+      }
+    }, cfg);
+    throwNew();
+  }
+
   function open(rollId) {
-    var state = window.AppStorage.getState();
-    var ch = state.character;
-    var charId = window.AppStorage.activeCharId();
-    if (charId !== optCharId) {
-      optOn = {};
-      optCharId = charId;
-    }
-    rolls = buildRolls(window.AppEngine.getView(), ch);
-    applyPortrait(ch);
-    el('dice-view').classList.add('open');
-    el('dice-view').setAttribute('aria-hidden', 'false');
-    isOpen = true;
-    fitFrame();
-    window.AppDice3D.init(el('dice-canvas'));
-    window.AppDice3D.start();
-    window.AppDiceFree.load();
+    prepareOpen();
 
     var lastId = rollId || readJson('last', null);
     if (lastId === FREE_ROLL.id) {
@@ -1163,8 +1267,30 @@
     }
   }
 
+  function prepareOpen() {
+    var state = window.AppStorage.getState();
+    var ch = state.character;
+    var charId = window.AppStorage.activeCharId();
+    if (charId !== optCharId) {
+      optOn = {};
+      optCharId = charId;
+    }
+    rolls = buildRolls(window.AppEngine.getView(), ch);
+    applyPortrait(ch);
+    el('dice-view').classList.add('open');
+    el('dice-view').setAttribute('aria-hidden', 'false');
+    isOpen = true;
+    fitFrame();
+    window.AppDice3D.init(el('dice-canvas'));
+    window.AppDice3D.start();
+    damageCtx = null;
+    el('dice-view').classList.remove('dice-has-ctx');
+    window.AppDiceFree.load();
+  }
+
   function close() {
     cancelDrag();
+    damageCtx = null;
     runToken++;
     phase = 'idle';
     isOpen = false;
@@ -1203,12 +1329,9 @@
         if (phase === 'rolling') {
           return;
         }
+        leaveDamage();
         window.AppDiceFree.applyRecent(index);
-        if (isFree()) {
-          resetStage();
-        } else {
-          setFree();
-        }
+        setFree();
         closeSheet();
         throwNew();
       }
@@ -1221,6 +1344,12 @@
       }
     });
     el('dice-free-roll').addEventListener('click', function () { throwNew(); });
+    el('dice-free-back').addEventListener('click', function () {
+      if (damageCtx) {
+        damageCtx.back();
+      }
+    });
+    el('dice-act-damage').addEventListener('click', startWeaponDamage);
     el('dice-back').addEventListener('click', close);
     el('dice-title').addEventListener('click', function () {
       if (phase !== 'rolling') {
@@ -1313,6 +1442,7 @@
     close: close,
     rollDie: rollDie,
     buildRolls: buildRolls,
-    markRollable: markRollable
+    markRollable: markRollable,
+    openSpellRoll: openSpellRoll
   };
 })();
