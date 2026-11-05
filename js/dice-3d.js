@@ -340,8 +340,9 @@
 
   /* ---------- pose e animazione ---------- */
 
-  /* Orientamento che porta davanti, dritta, la faccia col numero dato; la
-     leggera inclinazione lascia vedere le facce vicine, come un dado vero. */
+  /* Orientamento che porta davanti, dritta, la faccia col numero dato. Guarda
+     appena in su per dare volume, ma senza pendere di lato: destra e sinistra
+     restano simmetriche. */
   function faceQuat(num) {
     var f = geo.faces.filter(function (g) { return g.num === num; })[0];
     var z = f.center;
@@ -349,7 +350,7 @@
     var along = dot(top, z);
     var y = norm(sub(top, [z[0] * along, z[1] * along, z[2] * along]));
 
-    return quatMul(quatAxis([1, 0, 0], -0.14), quatMul(quatAxis([0, 1, 0], 0.13), mat3ToQuat([cross(y, z), y, z])));
+    return quatMul(quatAxis([1, 0, 0], -0.14), mat3ToQuat([cross(y, z), y, z]));
   }
 
   function makeDie(num, slot) {
