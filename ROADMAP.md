@@ -40,7 +40,7 @@
   scelta dello slot fra quelli del personaggio; dadi letti dal testo (`spellRoll`),
   metà per difetto per chi supera il TS. Cache busting `?v=251`.
 
-  **Liste incantesimi allineate al PHB (manuale `version: 57`, `?v=251`):** il
+  **Liste incantesimi allineate al PHB (manuale `version: 57`, `?v=252`):** il
   campo `classes` confrontato con il PDF (intestazione di ogni voce e "Spell List"
   di classe) per tutti i 391 incantesimi. Tolti 80 tag in più: venivano dalle
   tabelle di sottoclasse e davano a tutta la classe incantesimi che spettano solo
