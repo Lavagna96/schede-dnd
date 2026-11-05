@@ -44,7 +44,9 @@
   a VoiceOver. Il gesto cambia solo l'animazione: il numero è estratto come
   prima. Verificato in locale con gesti simulati e trascinamenti reali del
   mouse; **sensazione e soglia di slancio sono da provare su iPhone.**
-  Cache busting `?v=245`.
+  Cache busting `?v=245`. Poi, su richiesta di Andrea (scelta B fra 3): il dado
+  si ferma dritto, senza pendere di lato, con la faccia appena rivolta in su.
+  Cache busting `?v=246`.
   **Più avanti:** altri dadi (d4–d100) e danni con critico; Ispirazione Bardica;
   suoni.
 - **Nota di sessione (2026-10-30): bug slot incantesimo dal 3° livello in
