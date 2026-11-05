@@ -407,7 +407,7 @@
     info.appendChild(name);
     var ctx = document.createElement('span');
     ctx.className = 'rc-ctx';
-    ctx.textContent = 'recupero: riposo lungo';
+    ctx.textContent = r.resetOn === 'short-full' ? 'recupero: riposo breve o lungo' : 'recupero: riposo lungo';
     info.appendChild(ctx);
     info.appendChild(document.createElement('div')).className = 'segbar';
     card.appendChild(info);
@@ -473,13 +473,20 @@
       }
     });
 
+    // Il riposo breve deve restare raggiungibile anche senza card nella sua
+    // sezione, se serve ad altro: slot del patto, Indebolimento del Ranger.
+    var shortRestMatters = view.exhaustionFallsOnShortRest || view.resources.some(function (r) {
+      return r.key.indexOf('sl') === 0 && r.resetOn === 'short-full';
+    });
+
     // nascondo le sezioni rimaste senza card visibili (la sezione oggetti la
     // gestisce js/items.js, la salto).
     document.querySelectorAll('.res-sec').forEach(function (sec) {
       if (sec.id === 'custom-items-res-sec') { return; }
       var hasVisible = Array.prototype.slice.call(sec.querySelectorAll('.res-card'))
         .some(function (c) { return !c.classList.contains('hidden'); });
-      sec.classList.toggle('hidden', !hasVisible);
+      var keep = shortRestMatters && sec.classList.contains('res-sec-short');
+      sec.classList.toggle('hidden', !hasVisible && !keep);
     });
   }
 

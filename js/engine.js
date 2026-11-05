@@ -574,7 +574,12 @@
       });
     }
     slots.forEach(function (n, i) {
-      resources.push({ key: 'sl' + (i + 1), max: n });
+      // Magia del Patto: tutti gli slot tornano anche col riposo breve.
+      var slot = { key: 'sl' + (i + 1), max: n };
+      if (effCasterType === 'pact') {
+        slot.resetOn = 'short-full';
+      }
+      resources.push(slot);
     });
     // Sovrascrive in posto invece di accodare: da "Risorse personalizzate"
     // si può modificare anche una risorsa di classe (stessa chiave), e senza
