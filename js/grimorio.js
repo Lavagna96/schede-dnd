@@ -331,6 +331,22 @@
   function openDetail(spell) {
     if (window.AppBottomSheet) {
       window.AppBottomSheet.open(spell.name, detailBody(spell));
+      appendRollBlock(spell);
+    }
+  }
+
+  // Se dal testo si ricavano dei dadi, il dettaglio offre il tiro.
+  function appendRollBlock(spell) {
+    var body = document.getElementById('sheet-body');
+    if (!body || !window.AppDiceFree || !window.AppDice) {
+      return;
+    }
+    var block = window.AppDiceFree.spellBlock(spell, window.AppEngine.getView(), function (info, slot, cfg) {
+      window.AppBottomSheet.close();
+      window.AppDice.openSpellRoll(spell, info, slot, cfg);
+    });
+    if (block) {
+      body.appendChild(block);
     }
   }
 
@@ -847,6 +863,7 @@
     render: render,
     renderSlots: renderSlots,
     openManual: openManual,
+    openDetail: openDetail,
     // Esposte per lo step facoltativo "Aggiorna incantesimi" del wizard
     // Sali di Livello (js/levelup.js): stesso identico dato/stato/toggle
     // del Glossario qui sopra, niente duplicazione.

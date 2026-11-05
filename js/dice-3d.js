@@ -700,6 +700,24 @@
     return Math.max.apply(null, geos[kind].faces.map(function (f) { return f.num; }));
   }
 
+  // Rimette i dadi fermi su un risultato già tirato, senza animazione.
+  function setResult(values, keep) {
+    pending = null;
+    fade = null;
+    dice = values.map(function (v, i) {
+      var d = makeDie(typeof v === 'number' ? { kind: 'd20', num: v } : v, slotFor(values.length, i));
+      var counts = keep == null || i === keep;
+      d.glow = counts ? 1 : 0;
+      d.dim = counts ? 0 : 1;
+
+      return d;
+    });
+    if (fallbackEl) {
+      fallbackEl.textContent = keep == null ? '' : String(values[keep]);
+    }
+    kick();
+  }
+
   // Il dito prende il dado così com'è in quel momento.
   function grab() {
     dice.forEach(function (d) {
@@ -791,6 +809,7 @@
     stop: stop,
     setIdle: setIdle,
     throwDice: throwDice,
+    setResult: setResult,
     grab: grab,
     dragBy: dragBy,
     release: release,
