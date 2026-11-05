@@ -775,9 +775,10 @@
     var tbody = document.querySelector('.combat-table tbody');
     if (tbody) {
       tbody.querySelectorAll('.custom-atk-row').forEach(function (row) { row.remove(); });
-      (ch.customAttacks || []).forEach(function (atk) {
+      (ch.customAttacks || []).forEach(function (atk, atkIndex) {
         var row = document.createElement('tr');
         row.className = 'custom-atk-row';
+        row.setAttribute('data-roll-id', 'custom:' + atkIndex + ':' + atk.name);
         var nameTd = document.createElement('td');
         var nameSpan = document.createElement('span');
         nameSpan.className = 'atk-name';
@@ -832,6 +833,9 @@
     renderItemTextEffects();
     renderResources(view);
     renderAttacks(view);
+    if (window.AppDice) {
+      window.AppDice.markRollable(); // righe abilità e attacchi appena ricreate
+    }
     setText('loh-max', view.poolMax.loh);
     // La card Imposizione delle Mani (pool) compare solo se la classe ha quel pool.
     var lohCard = document.querySelector('.loh-card');

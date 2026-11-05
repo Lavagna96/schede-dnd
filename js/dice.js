@@ -1,6 +1,8 @@
 (function () {
-  /* Lancio dadi (menu laterale): schermata a tutto schermo con il d20 in 3D
-     (js/dice-3d.js), le carte dei bonus e il verdetto contro la CD. I bonus
+  /* Lancio dadi (menu laterale o tocco su un valore della scheda): schermata a
+     tutto schermo con i dadi in 3D (js/dice-3d.js). I tiri del personaggio hanno
+     il d20, le carte dei bonus e il verdetto contro la CD; il tiro libero (scelta
+     dei dadi in js/dice-free.js) ha solo dadi, bonus e totale. I bonus
      arrivano dalle voci `parts` del motore (js/engine.js), le stesse che
      compongono i totali della scheda: qui non si ricalcola nulla.
 
@@ -55,12 +57,19 @@
   var CARD_SHAPE = '<svg class="dice-card-shape" viewBox="0 0 84 112" preserveAspectRatio="none" aria-hidden="true"><path d="M1 14C18 14 32 10 42 1C52 10 66 14 83 14V104C83 108 80 111 76 111H8C4 111 1 108 1 104Z" fill="url(#dice-g-card)" stroke="#a8842c" stroke-width="1.1" vector-effect="non-scaling-stroke"/></svg>';
 
   var PICKER_TABS = [
+    { id: 'free', label: 'Dadi' },
     { id: 'skills', label: 'Abilità' },
-    { id: 'abilities', label: 'Caratteristiche' },
+    { id: 'abilities', label: 'Caratt.' },
     { id: 'saves', label: 'Salvezza' },
     { id: 'attacks', label: 'Attacchi' },
-    { id: 'history', label: 'Cronologia' }
+    { id: 'history', label: 'Storia' }
   ];
+
+  // Il tiro libero sul palco: nessun bonus fisso, nessun facoltativo.
+  var FREE_ROLL = { id: 'free', kind: 'free', name: '', sub: 'Tiro libero', parts: [], opts: [] };
+
+  // Valori della scheda che si tirano toccandoli.
+  var ROLLABLE_SELECTOR = '[data-skill], [data-save], [data-abil], .cs-init, .custom-atk-row';
 
   var OUTCOME_TEXT = {
     crit: 'COLPO CRITICO',
@@ -86,6 +95,11 @@
   var lastDragEnd = 0;
   var isOpen = false;
   var clearArmed = false;
+  var renderedTab = null;
+
+  function isFree() {
+    return current === FREE_ROLL;
+  }
 
   function el(id) {
     return document.getElementById(id);
@@ -245,7 +259,15 @@
   // Un ritiro e un cambio di CD aggiornano la stessa riga, non ne creano una nuova.
   function recordHistory() {
     var history = readJson('history', []);
-    var entry = {
+    var entry = isFree() ? {
+      t: result.t,
+      name: window.AppDiceFree.formula(),
+      sub: FREE_ROLL.sub,
+      detail: window.AppDiceFree.detailText(result.free),
+      total: result.free.total,
+      kind: 'free',
+      outcome: null
+    } : {
       t: result.t,
       name: current.name,
       sub: current.sub,
@@ -446,7 +468,32 @@
     clearOutcome();
     el('dice-hint').classList.remove('off');
     renderCards();
-    window.AppDice3D.setIdle(adv ? 2 : 1);
+    if (isFree()) {
+      window.AppDice3D.setIdle(window.AppDiceFree.specs());
+      el('dice-name').textContent = window.AppDiceFree.formula();
+      el('dice-sub').textContent = FREE_ROLL.sub;
+      setFreeTotal(null);
+      window.AppDiceFree.renderPanel();
+    } else {
+      window.AppDice3D.setIdle(adv ? 2 : 1);
+    }
+  }
+
+  // Nel tiro libero il totale sta dove negli altri tiri c'è la CD.
+  function setFreeTotal(total) {
+    el('dice-cd-num').textContent = total == null ? '—' : total;
+    el('dice-cd-num').setAttribute('aria-label', total == null ? 'Nessun totale' : 'Totale ' + total);
+  }
+
+  function setFree() {
+    current = FREE_ROLL;
+    adv = 0;
+    cd = null;
+    writeJson('last', FREE_ROLL.id);
+    el('dice-view').classList.add('dice-is-free');
+    el('dice-cd-label').textContent = 'TOTALE';
+    resetStage();
+    fitFrame();
   }
 
   function setRoll(roll) {
@@ -454,6 +501,8 @@
     adv = 0;
     cd = null;
     writeJson('last', roll.id);
+    el('dice-view').classList.remove('dice-is-free');
+    fitFrame();
     el('dice-name').textContent = roll.name;
     el('dice-sub').textContent = roll.sub;
     el('dice-cd-label').innerHTML = roll.kind === 'attack' ? 'CLASSE<br>ARMATURA' : 'CLASSE<br>DIFFICOLTÀ';
@@ -471,6 +520,11 @@
   // fling: verso e forza del gesto, cambiano solo l'animazione.
   function throwNew(fling) {
     if (phase === 'rolling') {
+      return;
+    }
+    if (isFree()) {
+      throwFree(fling);
+
       return;
     }
     var token = ++runToken;
@@ -493,6 +547,35 @@
       if (token === runToken) {
         reveal(token);
       }
+    }, undefined, fling);
+  }
+
+  function throwFree(fling) {
+    var free = window.AppDiceFree;
+    if (free.isEmpty()) {
+      pickerTab = 'free';
+      openSheet();
+
+      return;
+    }
+    var token = ++runToken;
+    phase = 'rolling';
+    clearOutcome();
+    setFreeTotal(null);
+    free.showHint('…');
+    var rolled = free.roll();
+    result = { t: Date.now(), free: rolled };
+    window.AppDice3D.throwDice(rolled.values, null, function () {
+      if (token !== runToken) {
+        return;
+      }
+      phase = 'done';
+      setFreeTotal(rolled.total);
+      free.remember();
+      free.renderPanel();
+      free.showBreakdown(rolled);
+      el('dice-status').textContent = 'Totale ' + rolled.total;
+      recordHistory();
     }, undefined, fling);
   }
 
@@ -792,6 +875,9 @@
   }
 
   function historyDetail(h) {
+    if (h.detail) {
+      return h.detail;
+    }
     var dice = h.d20s.length > 1
       ? h.d20s.join(' e ') + (h.adv > 0 ? ' con vantaggio' : ' con svantaggio')
       : String(h.d20s[0]);
@@ -877,8 +963,17 @@
       tabs.appendChild(b);
     });
     var list = el('dice-picker-list');
+    // Cambiando una quantità il foglio non deve tornare in cima.
+    var keptScroll = pickerTab === 'free' && renderedTab === 'free' ? list.scrollTop : 0;
+    renderedTab = pickerTab;
     list.innerHTML = '';
     list.scrollTop = 0;
+    if (pickerTab === 'free') {
+      window.AppDiceFree.buildPicker(list);
+      list.scrollTop = keptScroll;
+
+      return;
+    }
     if (pickerTab === 'history') {
       buildHistory(list);
 
@@ -949,7 +1044,89 @@
     el('dice-bg').style.backgroundImage = src ? 'url("' + String(src).replace(/"/g, '%22') + '")' : '';
   }
 
-  function open() {
+  /* ---------- tiro toccando un valore della scheda ---------- */
+
+  function rollIdFrom(target) {
+    if (target.closest('button, a, input, select, textarea, label')) {
+      return null;
+    }
+    var node = target.closest(ROLLABLE_SELECTOR);
+    if (node) {
+      if (node.hasAttribute('data-skill')) {
+        return 'skill:' + node.getAttribute('data-skill');
+      }
+      if (node.hasAttribute('data-save')) {
+        return 'save:' + node.getAttribute('data-save');
+      }
+      if (node.hasAttribute('data-abil')) {
+        return 'abil:' + node.getAttribute('data-abil');
+      }
+      if (node.classList.contains('cs-init')) {
+        return 'init';
+      }
+
+      return node.getAttribute('data-roll-id');
+    }
+    var row = target.closest('.combat-table tr');
+    if (row && row.querySelector('#atk-weapon-hit')) {
+      return 'weapon';
+    }
+    var spell = el('grim-atk');
+
+    return spell && spell.parentElement.contains(target) ? 'spell' : null;
+  }
+
+  // Il tiro si apre pronto: a lanciare è sempre il giocatore.
+  function openRoll(id) {
+    rolls = buildRolls(window.AppEngine.getView(), window.AppStorage.getState().character);
+    if (allRolls().some(function (r) { return r.id === id; })) {
+      open(id);
+    }
+  }
+
+  function markRollable() {
+    var main = el('main-content');
+    if (!main) {
+      return;
+    }
+    var nodes = [].slice.call(main.querySelectorAll(ROLLABLE_SELECTOR));
+    var hit = el('atk-weapon-hit');
+    var spell = el('grim-atk');
+    if (hit) {
+      nodes.push(hit.closest('tr'));
+    }
+    if (spell) {
+      nodes.push(spell.parentElement);
+    }
+    nodes.forEach(function (node) {
+      node.classList.add('dice-rollable');
+      node.setAttribute('role', 'button');
+      node.setAttribute('tabindex', '0');
+    });
+  }
+
+  function bindSheetRolls() {
+    var main = el('main-content');
+    main.addEventListener('click', function (e) {
+      var id = rollIdFrom(e.target);
+      if (id) {
+        openRoll(id);
+      }
+    });
+    main.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') {
+        return;
+      }
+      var id = rollIdFrom(e.target);
+      if (id) {
+        e.preventDefault();
+        openRoll(id);
+      }
+    });
+    markRollable();
+  }
+
+  function open(rollId) {
     var state = window.AppStorage.getState();
     var ch = state.character;
     var charId = window.AppStorage.activeCharId();
@@ -965,8 +1142,18 @@
     fitFrame();
     window.AppDice3D.init(el('dice-canvas'));
     window.AppDice3D.start();
+    window.AppDiceFree.load();
 
-    var lastId = readJson('last', null);
+    var lastId = rollId || readJson('last', null);
+    if (lastId === FREE_ROLL.id) {
+      pickerTab = 'free';
+      setFree();
+      if (window.AppDiceFree.isEmpty()) {
+        openSheet();
+      }
+
+      return;
+    }
     var last = allRolls().filter(function (r) { return r.id === lastId; })[0];
     pickerTab = 'skills';
     setRoll(last || rolls.abilities[0]);
@@ -992,6 +1179,48 @@
     if (!view) {
       return;
     }
+    window.AppDiceFree.init({
+      rollDie: rollDie,
+      readJson: readJson,
+      writeJson: writeJson,
+      // Una quantità cambiata nel foglio porta il tiro libero sul palco.
+      onChange: function () {
+        if (isFree()) {
+          resetStage();
+        } else {
+          setFree();
+        }
+        renderPicker();
+      },
+      onDone: function () {
+        if (!window.AppDiceFree.isEmpty() && !isFree()) {
+          setFree();
+        }
+        closeSheet();
+      },
+      // Un recente si tira subito: è il modo più rapido di rifare un tiro.
+      onRecent: function (index) {
+        if (phase === 'rolling') {
+          return;
+        }
+        window.AppDiceFree.applyRecent(index);
+        if (isFree()) {
+          resetStage();
+        } else {
+          setFree();
+        }
+        closeSheet();
+        throwNew();
+      }
+    });
+    bindSheetRolls();
+    el('dice-free-change').addEventListener('click', function () {
+      if (phase !== 'rolling') {
+        pickerTab = 'free';
+        openSheet();
+      }
+    });
+    el('dice-free-roll').addEventListener('click', function () { throwNew(); });
     el('dice-back').addEventListener('click', close);
     el('dice-title').addEventListener('click', function () {
       if (phase !== 'rolling') {
@@ -1032,6 +1261,9 @@
     });
     // Toccare il numero toglie la CD (il DM non l'ha dichiarata) o la rimette.
     el('dice-cd-num').addEventListener('click', function () {
+      if (isFree()) {
+        return;
+      }
       setCd(cd == null ? (lastCd || CD_START) : null);
     });
 
@@ -1080,6 +1312,7 @@
     open: open,
     close: close,
     rollDie: rollDie,
-    buildRolls: buildRolls
+    buildRolls: buildRolls,
+    markRollable: markRollable
   };
 })();
