@@ -28,10 +28,25 @@
   locale: carte = totali della scheda su tutte le classi, sottoclassi e livelli
   (32.940 controlli), equità del d20 (chi-quadro 13 su 200.000 tiri, soglia
   43,8), casi limite forzati, viewport 375×667/375×812/430×932.
-  **Da fare:** prova su iPhone reale; altri dadi (d4–d100) e danni con critico;
-  Ispirazione Bardica; suoni; tiro toccando un'abilità sulla scheda.
-  **Domanda aperta ad Andrea:** aggiungere anche alla scheda Jack of All Trades
-  e Indebolimento, che oggi il motore non calcola (e quindi nemmeno il dado).
+  **Prossimi punti da fare (decisi da Andrea il 2026-11-05):**
+  1. Aggiungere alla scheda Jack of All Trades e Indebolimento: oggi il motore
+     non li calcola, quindi nemmeno il dado (per un Bardo i totali possono
+     risultare più bassi del dovuto).
+  2. Tiro toccando un'abilità sulla scheda.
+  3. Slot del patto del Warlock: controllare sul PDF se la dicitura "recupero:
+     riposo lungo" è giusta e correggerla se non lo è.
+
+  **Gesto di lancio (segnalato da Andrea su iPhone, scelta B "afferra e
+  scaglia"):** il dado ascoltava solo il `click`, quindi lo swipe col dito non
+  faceva nulla. Ora segue il dito e ruota; rilasciato con slancio (almeno 0,35
+  px/ms negli ultimi 90 ms) tira, posato piano torna al suo posto senza tirare
+  e senza toccare totale, verdetto e cronologia. Il tap resta, il `click` serve
+  a VoiceOver. Il gesto cambia solo l'animazione: il numero è estratto come
+  prima. Verificato in locale con gesti simulati e trascinamenti reali del
+  mouse; **sensazione e soglia di slancio sono da provare su iPhone.**
+  Cache busting `?v=245`.
+  **Più avanti:** altri dadi (d4–d100) e danni con critico; Ispirazione Bardica;
+  suoni.
 - **Nota di sessione (2026-10-30): bug slot incantesimo dal 3° livello in
   su** — segnalato da Andrea (Tharion al 9°: nel Grimorio mancava lo slot di
   3° livello). Causa: in `index.html` esistevano solo due card slot scritte
