@@ -1,0 +1,743 @@
+/*
+ * Lancio dadi (js/dice.js, js/dice-3d.js): schermata a tutto schermo aperta dal
+ * menu laterale. Sopra la scheda e sotto il menu, così il cassetto si chiude
+ * scoprendola. --dice-scale è calcolato in fitFrame: la cornice ha misure
+ * fisse in pixel e si scala tutta insieme sullo spazio libero.
+ */
+
+.dice-view {
+  --dice-scale: 1;
+  --dice-gold-pale: #e9d9a8;
+  --dice-gold-line: #8f7433;
+  --dice-ink: #fbf6ea;
+  --dice-label: #d8c8a4;
+  --dice-muted: #a79f90;
+  position: fixed;
+  inset: 0;
+  z-index: 240; /* sopra l'app, sotto dashboard (250) e menu (264-265) */
+  display: none;
+  overflow: hidden;
+  color: var(--dice-ink);
+  background: #100c14;
+}
+
+.dice-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  border-radius: 0;
+}
+
+.dice-view.open {
+  display: block;
+}
+
+/* Sfondo: il ritratto del personaggio, scurito; senza ritratto resta il viola. */
+.dice-bg {
+  position: absolute;
+  inset: 0;
+  background-position: center 18%;
+  background-size: cover;
+  filter: saturate(0.85) brightness(0.82) blur(0.6px);
+  transform: scale(1.06);
+}
+
+.dice-bg-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 44%, rgba(24, 14, 34, 0.25) 0%, rgba(12, 8, 16, 0.62) 78%),
+    linear-gradient(180deg, rgba(10, 7, 14, 0.62) 0%, rgba(10, 7, 14, 0.08) 20%, rgba(10, 7, 14, 0.25) 60%, rgba(10, 7, 14, 0.9) 100%);
+}
+
+.dice-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: env(safe-area-inset-top, 0px) 8px calc(env(safe-area-inset-bottom, 0px) + 6px);
+}
+
+.dice-back {
+  position: absolute;
+  top: env(safe-area-inset-top, 0px);
+  left: 4px;
+  z-index: 5;
+  width: 44px;
+  height: 56px;
+  background: none;
+  border: 0;
+  color: var(--dice-gold-pale);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.dice-title {
+  flex: none;
+  z-index: 4;
+  max-width: 100%;
+  min-height: 56px;
+  padding: 6px 48px 0;
+  background: none;
+  border: 0;
+  text-align: center;
+  color: inherit;
+}
+
+.dice-title-main {
+  display: block;
+  font: 600 25px/1.15 var(--font-title);
+  color: #f6f0e2;
+  text-shadow: 0 2px 10px #000;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dice-title-chev {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--gold-bright);
+  vertical-align: 3px;
+}
+
+.dice-title-sub {
+  display: block;
+  font: 500 13.5px/1.3 var(--font-title);
+  color: #cdb78a;
+  text-shadow: 0 1px 6px #000;
+}
+
+/* ---------- cornice ---------- */
+
+.dice-frame-host {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dice-frame {
+  position: relative;
+  flex: none;
+  width: calc(340px * var(--dice-scale));
+  height: calc(416px * var(--dice-scale));
+}
+
+.dice-frame-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 416px;
+  transform: scale(var(--dice-scale));
+  transform-origin: top left;
+}
+
+.dice-deco {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dice-cd {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  text-align: center;
+}
+
+.dice-cd-label {
+  font: 500 11px/1.15 var(--font-title);
+  letter-spacing: 0.06em;
+  color: #e4dcc8;
+}
+
+.dice-cd-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -2px;
+}
+
+.dice-cd-num {
+  width: 66px;
+  height: 42px;
+  background: none;
+  border: 0;
+  font: 600 33px/1 var(--font-title);
+  color: var(--dice-ink);
+}
+
+.dice-cd-arrow {
+  width: 44px;
+  height: 42px;
+  background: none;
+  border: 0;
+  font-size: 20px;
+  color: var(--gold-bright);
+  opacity: 0.8;
+}
+
+.dice-canvas {
+  position: absolute;
+  left: 30px;
+  top: 124px;
+  width: 280px;
+  height: 280px;
+  z-index: 2;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* Solo se WebGL manca: il numero al posto del dado. */
+.dice-fallback {
+  position: absolute;
+  left: 95px;
+  top: 195px;
+  width: 150px;
+  height: 150px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 54px/1 var(--font-title);
+  color: var(--dice-gold-pale);
+  background: linear-gradient(160deg, #5a5272, #2b2340);
+  clip-path: polygon(50% 0, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%);
+  pointer-events: none;
+}
+
+.dice-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 366px;
+  z-index: 3;
+  text-align: center;
+  font: 500 11.5px/1.2 var(--font-title);
+  letter-spacing: 0.05em;
+  color: #c6b58e;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.dice-hint.off {
+  opacity: 0;
+}
+
+.dice-total {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 338px;
+  z-index: 4;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.dice-total.show {
+  opacity: 1;
+}
+
+.dice-total-label {
+  display: block;
+  margin-bottom: 1px;
+  font: 500 10px/1.2 var(--font-title);
+  letter-spacing: 0.1em;
+  color: var(--dice-label);
+  text-shadow: 0 1px 3px #000;
+}
+
+.dice-total-n {
+  font: 700 30px/1 var(--font-title);
+  color: #fff;
+  text-shadow: 0 0 14px rgba(0, 0, 0, 0.9), 0 2px 3px #000;
+}
+
+.dice-verdict {
+  --verdict-color: var(--dice-gold-pale);
+  --verdict-glow: rgba(201, 164, 67, 0.7);
+  position: absolute;
+  left: -25px;
+  right: -25px;
+  top: 142px;
+  z-index: 6;
+  padding: 8px 0 9px;
+  text-align: center;
+  background: linear-gradient(90deg, transparent, rgba(9, 6, 12, 0.9) 20%, rgba(9, 6, 12, 0.9) 80%, transparent);
+  opacity: 0;
+  transform: scale(1.25);
+  transition: opacity 0.22s, transform 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
+  pointer-events: none;
+}
+
+.dice-verdict::before,
+.dice-verdict::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--verdict-color), transparent);
+}
+
+.dice-verdict::before {
+  top: 0;
+}
+
+.dice-verdict::after {
+  bottom: 0;
+}
+
+.dice-verdict.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dice-verdict.ko,
+.dice-verdict.miss {
+  --verdict-color: #e0465e;
+  --verdict-glow: rgba(204, 36, 64, 0.65);
+}
+
+.dice-verdict.crit {
+  --verdict-color: #ffe28a;
+  --verdict-glow: rgba(255, 205, 90, 0.95);
+}
+
+.dice-verdict-text {
+  font: 700 30px/1.1 var(--font-title);
+  letter-spacing: 0.06em;
+  color: var(--verdict-color);
+  text-shadow: 0 0 22px var(--verdict-glow);
+}
+
+/* ---------- carte dei bonus ---------- */
+
+.dice-cards {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+  z-index: 4;
+}
+
+.dice-card {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 88px;
+  height: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 14px;
+  filter: brightness(0.88);
+  transition: filter 0.2s, transform 0.2s;
+}
+
+.dice-card-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dice-card-val {
+  position: relative;
+  font: 600 14.5px/1.15 var(--font-title);
+  color: var(--dice-ink);
+}
+
+.dice-card-ic {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.dice-card-lbl {
+  position: relative;
+  margin-top: 2px;
+  padding: 0 3px;
+  font: 500 9.8px/1.12 var(--font-title);
+  text-align: center;
+  color: var(--dice-label);
+}
+
+.dice-cards.many .dice-card-lbl {
+  font-size: 8.4px;
+  padding: 0 1px;
+}
+
+.dice-card.lit {
+  filter: brightness(1.3) drop-shadow(0 0 8px rgba(201, 164, 67, 0.65));
+  transform: translateY(-4px);
+}
+
+.dice-card.opt {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dice-card.opt-first {
+  margin-left: 8px;
+}
+
+.dice-card.opt-first::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--gold-bright), transparent);
+}
+
+.dice-card.opt.off {
+  filter: brightness(0.55) saturate(0.6);
+}
+
+.dice-card-toggle {
+  position: absolute;
+  top: 1px;
+  right: -1px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-bright);
+  background: #16111c;
+  font: 600 13px/16px var(--font-body);
+  text-align: center;
+  color: var(--dice-gold-pale);
+}
+
+/* ---------- vantaggio e azioni ---------- */
+
+.dice-adv {
+  flex: none;
+  display: flex;
+  margin-top: 6px;
+  z-index: 4;
+  overflow: hidden;
+  border: 1px solid rgba(201, 164, 67, 0.35);
+  border-radius: 10px;
+  background: rgba(14, 10, 18, 0.72);
+}
+
+.dice-adv .dice-btn {
+  min-height: 38px;
+  padding: 0 12px;
+  font: 500 11px/1 var(--font-title);
+  color: #b3a88f;
+}
+
+.dice-adv .dice-btn.on {
+  background: rgba(201, 164, 67, 0.2);
+  color: var(--dice-gold-pale);
+}
+
+.dice-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  margin-top: 2px;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.dice-actions.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dice-act {
+  height: 38px;
+  padding: 0 13px;
+  white-space: nowrap;
+  border: 1px solid var(--dice-gold-line);
+  border-radius: 10px;
+  background: rgba(18, 13, 23, 0.88);
+  font: 500 12px/1 var(--font-title);
+  color: var(--dice-gold-pale);
+}
+
+.dice-act.gold {
+  border-color: var(--gold-bright);
+  background: linear-gradient(180deg, rgba(201, 164, 67, 0.3), rgba(201, 164, 67, 0.1));
+}
+
+.dice-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- foglio di scelta del tiro ---------- */
+
+.dice-sheet-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+}
+
+.dice-view.sheet-open .dice-sheet-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dice-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 70%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #17121d;
+  border-top: 1px solid var(--dice-gold-line);
+  border-radius: 20px 20px 0 0;
+  transform: translateY(102%);
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.dice-view.sheet-open .dice-sheet {
+  transform: none;
+}
+
+.dice-sheet-grab {
+  flex: none;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.dice-sheet-grab::before {
+  content: '';
+  width: 40px;
+  height: 4px;
+  border-radius: 3px;
+  background: #5a4f3a;
+}
+
+.dice-tabs {
+  flex: none;
+  display: flex;
+  gap: 1px;
+  padding: 0 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dice-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.dice-tab.dice-btn {
+  flex: 1 0 auto;
+  min-height: 42px;
+  padding: 0 3px;
+  border-bottom: 1px solid rgba(201, 164, 67, 0.2);
+  font: 500 10px/1 var(--font-title);
+  color: #a99e86;
+}
+
+.dice-tab.dice-btn.on {
+  border-bottom: 2px solid var(--gold-bright);
+  color: var(--dice-gold-pale);
+}
+
+.dice-list {
+  flex: 1;
+  min-height: 0;
+  padding: 2px 10px 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.dice-row.dice-btn {
+  width: 100%;
+  min-height: 47px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 11px;
+  border-bottom: 1px solid rgba(201, 164, 67, 0.12);
+  text-align: left;
+}
+
+.dice-row.current {
+  background: rgba(201, 164, 67, 0.08);
+}
+
+.dice-row-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  border: 1px solid var(--gold-bright);
+}
+
+.dice-row-dot.p {
+  background: var(--gold-bright);
+}
+
+.dice-row-dot.e {
+  background: #fff3c4;
+  box-shadow: 0 0 5px var(--gold-bright);
+}
+
+.dice-row-name {
+  flex: 1;
+  min-width: 0;
+  font: 500 14px/1.2 var(--font-body);
+  color: #ece6d8;
+}
+
+.dice-row-abil {
+  width: 30px;
+  font: 500 10px/1 var(--font-title);
+  color: #938a78;
+}
+
+.dice-row-bonus {
+  min-width: 36px;
+  text-align: right;
+  font: 600 16px/1 var(--font-title);
+  color: var(--dice-gold-pale);
+}
+
+.dice-history-empty {
+  padding: 26px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--dice-muted);
+}
+
+.dice-history-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 7px 11px;
+  border-bottom: 1px solid rgba(201, 164, 67, 0.12);
+}
+
+.dice-history-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dice-history-name {
+  font: 500 13px/1.25 var(--font-body);
+  color: #ece6d8;
+}
+
+.dice-history-detail {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--dice-muted);
+}
+
+.dice-history-side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.dice-history-total {
+  font: 600 19px/1 var(--font-title);
+  color: var(--dice-gold-pale);
+}
+
+.dice-history-outcome {
+  font: 500 8.5px/1.1 var(--font-title);
+  color: var(--dice-gold-pale);
+}
+
+.dice-history-row.ko .dice-history-outcome,
+.dice-history-row.miss .dice-history-outcome {
+  color: #e0465e;
+}
+
+.dice-history-clear.dice-btn {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--dice-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-verdict,
+  .dice-card,
+  .dice-sheet {
+    transition: none;
+  }
+}
+
+@media (max-height: 700px) {
+  .dice-title-main {
+    font-size: 21px;
+  }
+
+  .dice-title {
+    min-height: 48px;
+    padding-top: 3px;
+  }
+
+  .dice-back {
+    height: 48px;
+  }
+
+  .dice-card {
+    height: 92px;
+    padding-top: 12px;
+  }
+
+  .dice-card-ic {
+    width: 26px;
+    height: 26px;
+  }
+}

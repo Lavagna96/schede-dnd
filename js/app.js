@@ -802,6 +802,11 @@
       });
     }
 
+    document.getElementById('menu-dice').addEventListener('click', function () {
+      window.AppDice.open();
+      window.AppMenu.close();
+    });
+
     document.getElementById('menu-manual').addEventListener('click', function () {
       window.AppGrimorio.openManual();
       window.AppMenu.close();
@@ -999,6 +1004,7 @@
       window.AppEquip.init();
     }
     window.AppLevelUp.init();
+    window.AppDice.init();
     if (window.AppCreate) {
       window.AppCreate.init();
     }

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=242">
+<link rel="stylesheet" href="css/styles.css?v=244">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -895,6 +895,122 @@
   </figure>
 </div>
 
+<!-- ========== LANCIO DADI (js/dice.js, js/dice-3d.js) ========== -->
+<section class="dice-view" id="dice-view" aria-label="Lancio dadi" aria-hidden="true">
+  <div class="dice-bg" id="dice-bg"></div>
+  <div class="dice-bg-shade"></div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="dice-g-card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2438"/><stop offset="1" stop-color="#16101d"/></linearGradient>
+      <linearGradient id="dice-g-icon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1dc9e"/><stop offset="1" stop-color="#a27a30"/></linearGradient>
+    </defs>
+  </svg>
+
+  <div class="dice-stage">
+    <button type="button" class="dice-back dice-btn" id="dice-back" aria-label="Torna alla scheda">‹</button>
+    <button type="button" class="dice-title dice-btn" id="dice-title" aria-label="Cambia tiro">
+      <span class="dice-title-main"><span id="dice-name">—</span><span class="dice-title-chev" aria-hidden="true">▼</span></span>
+      <span class="dice-title-sub" id="dice-sub"></span>
+    </button>
+
+    <div class="dice-frame-host" id="dice-frame-host">
+      <div class="dice-frame">
+        <div class="dice-frame-inner">
+          <svg class="dice-deco" viewBox="0 0 340 416" aria-hidden="true">
+            <defs>
+              <linearGradient id="dice-g-gold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#e8cf8b"/><stop offset=".35" stop-color="#a97f35"/>
+                <stop offset=".65" stop-color="#d9b566"/><stop offset="1" stop-color="#7c5c26"/>
+              </linearGradient>
+              <linearGradient id="dice-g-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2a2333" stop-opacity=".82"/>
+                <stop offset=".5" stop-color="#2d2140" stop-opacity=".86"/>
+                <stop offset="1" stop-color="#1a1224" stop-opacity=".92"/>
+              </linearGradient>
+              <radialGradient id="dice-g-halo" cx=".5" cy=".62" r=".5">
+                <stop offset="0" stop-color="#7d6aa8" stop-opacity=".42"/>
+                <stop offset=".6" stop-color="#4d3a72" stop-opacity=".16"/>
+                <stop offset="1" stop-color="#4d3a72" stop-opacity="0"/>
+              </radialGradient>
+              <pattern id="dice-p-knot" width="12" height="10" patternUnits="userSpaceOnUse">
+                <path d="M0 2.5C3 2.5 3 7.5 6 7.5S9 2.5 12 2.5M0 7.5C3 7.5 3 2.5 6 2.5S9 7.5 12 7.5" fill="none" stroke="#c9a65a" stroke-width="1"/>
+              </pattern>
+              <path id="dice-p-outer" d="M170 8C188 26 214 30 244 30C268 30 282 44 286 66C304 70 312 84 312 102L312 280C312 300 302 312 286 316C282 342 266 354 244 358C214 364 188 384 170 410C152 384 126 364 96 358C74 354 58 342 54 316C38 312 28 300 28 280L28 102C28 84 36 70 54 66C58 44 72 30 96 30C126 30 152 26 170 8Z"/>
+            </defs>
+            <use href="#dice-p-outer" fill="url(#dice-g-fill)"/>
+            <use href="#dice-p-outer" fill="url(#dice-g-halo)"/>
+            <use href="#dice-p-outer" fill="none" stroke="url(#dice-g-gold)" stroke-width="1.8"/>
+            <use href="#dice-p-outer" fill="none" stroke="#6f5828" stroke-width=".7" transform="translate(170 209) scale(.965) translate(-170 -209)"/>
+            <g fill="none" stroke="#b9a3dc" stroke-opacity=".14">
+              <circle cx="170" cy="262" r="72"/><circle cx="170" cy="262" r="104"/><circle cx="170" cy="262" r="128"/>
+            </g>
+            <rect x="30" y="118" width="280" height="12" fill="#161019"/>
+            <rect x="86" y="119" width="168" height="10" fill="url(#dice-p-knot)"/>
+            <path d="M30 118H310M30 130H310" stroke="url(#dice-g-gold)" stroke-width="1"/>
+            <path d="M30 124H74M266 124H310" stroke="#c9a65a" stroke-width="2.2"/>
+            <g fill="#c9a65a" stroke="#6f5828" stroke-width=".6">
+              <path d="M80 117l7 7-7 7-7-7z"/><path d="M260 117l7 7-7 7-7-7z"/>
+              <path d="M31 118l5 6-5 6-5-6z"/><path d="M309 118l5 6-5 6-5-6z"/>
+            </g>
+            <g fill="none" stroke="url(#dice-g-gold)" stroke-width="1.6" stroke-linecap="round">
+              <g id="dice-corner-top">
+                <path d="M6 112V62C6 44 18 34 34 32C42 31 50 26 54 18"/>
+                <path d="M6 84C12 78 16 70 16 60C16 50 24 44 34 44"/>
+                <path d="M54 18C60 22 66 20 72 14"/>
+                <circle cx="6" cy="116" r="2.4" fill="#c9a65a" stroke="none"/>
+              </g>
+              <use href="#dice-corner-top" transform="translate(340 0) scale(-1 1)"/>
+              <g id="dice-corner-bottom">
+                <path d="M6 296V338C6 356 18 366 34 368C42 369 50 374 54 384"/>
+                <path d="M6 320C12 326 16 334 16 342C16 352 24 356 34 356"/>
+                <path d="M54 384C62 382 68 386 74 394"/>
+                <circle cx="6" cy="292" r="2.4" fill="#c9a65a" stroke="none"/>
+              </g>
+              <use href="#dice-corner-bottom" transform="translate(340 0) scale(-1 1)"/>
+            </g>
+          </svg>
+
+          <div class="dice-cd">
+            <div class="dice-cd-label" id="dice-cd-label">CLASSE<br>DIFFICOLTÀ</div>
+            <div class="dice-cd-row">
+              <button type="button" class="dice-cd-arrow dice-btn" id="dice-cd-down" aria-label="Diminuisci">‹</button>
+              <button type="button" class="dice-cd-num dice-btn" id="dice-cd-num">—</button>
+              <button type="button" class="dice-cd-arrow dice-btn" id="dice-cd-up" aria-label="Aumenta">›</button>
+            </div>
+          </div>
+
+          <canvas class="dice-canvas" id="dice-canvas" role="button" tabindex="0" aria-label="Tira il dado"></canvas>
+          <div class="dice-hint" id="dice-hint">Tocca il dado per tirare</div>
+          <div class="dice-total" id="dice-total"><span class="dice-total-label">TOTALE</span><span class="dice-total-n" id="dice-total-n">0</span></div>
+          <div class="dice-verdict" id="dice-verdict"><span class="dice-verdict-text" id="dice-verdict-text"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dice-cards" id="dice-cards"></div>
+
+    <div class="dice-adv" id="dice-adv">
+      <button type="button" class="dice-btn" data-adv="-1">Svantaggio</button>
+      <button type="button" class="dice-btn" data-adv="0">Normale</button>
+      <button type="button" class="dice-btn" data-adv="1">Vantaggio</button>
+    </div>
+
+    <div class="dice-actions" id="dice-actions">
+      <button type="button" class="dice-act dice-btn gold hidden" id="dice-act-insp">★ Ritira con Ispirazione</button>
+      <button type="button" class="dice-act dice-btn gold hidden" id="dice-act-luck">Ritira con Fortuna</button>
+      <button type="button" class="dice-act dice-btn" id="dice-act-again">Tira di nuovo</button>
+    </div>
+    <p class="dice-status" id="dice-status" aria-live="polite"></p>
+  </div>
+
+  <div class="dice-sheet-overlay" id="dice-sheet-overlay"></div>
+  <div class="dice-sheet" id="dice-sheet">
+    <div class="dice-sheet-grab" id="dice-sheet-grab"></div>
+    <div class="dice-tabs" id="dice-picker-tabs"></div>
+    <div class="dice-list" id="dice-picker-list"></div>
+  </div>
+</section>
+
 <div class="app-menu-overlay hidden" id="app-menu-overlay"></div>
 <aside class="app-menu" id="app-menu" aria-hidden="true">
   <div class="app-menu-brand">
@@ -909,6 +1025,7 @@
   <div class="app-menu-panels">
     <nav class="app-menu-panel active" data-panel="main">
       <button type="button" class="app-menu-item" id="menu-dashboard" data-scope="scheda">I tuoi personaggi</button>
+      <button type="button" class="app-menu-item" id="menu-dice" data-scope="scheda">Lancio dadi</button>
       <button type="button" class="app-menu-item" id="menu-settings">Impostazioni</button>
       <button type="button" class="app-menu-item" id="menu-manual-root" data-scope="scheda">Manuale</button>
       <div class="app-menu-divider" data-scope="scheda"></div>
@@ -942,35 +1059,37 @@
   <button type="button" class="app-menu-logout" id="menu-logout">Esci</button>
 </aside>
 
-<script src="js/firebase-config.js?v=242"></script>
-<script src="js/manual-55.js?v=242"></script>
-<script src="js/sources.js?v=242"></script>
-<script src="js/config.js?v=242"></script>
-<script src="js/storage.js?v=242"></script>
-<script src="js/engine.js?v=242"></script>
-<script src="js/hp-bar.js?v=242"></script>
-<script src="js/header.js?v=242"></script>
-<script src="js/stats.js?v=242"></script>
-<script src="js/traits.js?v=242"></script>
-<script src="js/sheet.js?v=242"></script>
-<script src="js/grimorio.js?v=242"></script>
-<script src="js/grimorio-advanced.js?v=242"></script>
-<script src="js/manual-browse.js?v=242"></script>
-<script src="js/treasury.js?v=242"></script>
-<script src="js/diary.js?v=242"></script>
-<script src="js/inspiration.js?v=242"></script>
-<script src="js/bottom-sheet.js?v=242"></script>
-<script src="js/edit-sheet.js?v=242"></script>
-<script src="js/items.js?v=242"></script>
-<script src="js/equip.js?v=242"></script>
-<script src="js/levelup.js?v=242"></script>
-<script src="js/menu.js?v=242"></script>
-<script src="js/app.js?v=242"></script>
-<script src="js/faceid.js?v=242"></script>
-<script src="js/dashboard.js?v=242"></script>
-<script src="js/create.js?v=242"></script>
-<script src="js/portrait.js?v=242"></script>
-<script src="js/update-check.js?v=242"></script>
-<script type="module" src="js/cloud.js?v=242"></script>
+<script src="js/firebase-config.js?v=244"></script>
+<script src="js/manual-55.js?v=244"></script>
+<script src="js/sources.js?v=244"></script>
+<script src="js/config.js?v=244"></script>
+<script src="js/storage.js?v=244"></script>
+<script src="js/engine.js?v=244"></script>
+<script src="js/hp-bar.js?v=244"></script>
+<script src="js/header.js?v=244"></script>
+<script src="js/stats.js?v=244"></script>
+<script src="js/traits.js?v=244"></script>
+<script src="js/sheet.js?v=244"></script>
+<script src="js/grimorio.js?v=244"></script>
+<script src="js/grimorio-advanced.js?v=244"></script>
+<script src="js/manual-browse.js?v=244"></script>
+<script src="js/treasury.js?v=244"></script>
+<script src="js/diary.js?v=244"></script>
+<script src="js/inspiration.js?v=244"></script>
+<script src="js/bottom-sheet.js?v=244"></script>
+<script src="js/edit-sheet.js?v=244"></script>
+<script src="js/items.js?v=244"></script>
+<script src="js/equip.js?v=244"></script>
+<script src="js/levelup.js?v=244"></script>
+<script src="js/dice-3d.js?v=244"></script>
+<script src="js/dice.js?v=244"></script>
+<script src="js/menu.js?v=244"></script>
+<script src="js/app.js?v=244"></script>
+<script src="js/faceid.js?v=244"></script>
+<script src="js/dashboard.js?v=244"></script>
+<script src="js/create.js?v=244"></script>
+<script src="js/portrait.js?v=244"></script>
+<script src="js/update-check.js?v=244"></script>
+<script type="module" src="js/cloud.js?v=244"></script>
 </body>
 </html>

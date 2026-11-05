@@ -110,6 +110,16 @@
     return (n >= 0 ? '+' : '−') + Math.abs(n);
   }
 
+  /* Dettaglio di un bonus per il lancio dadi (js/dice.js): stesse voci che il
+     motore somma nel totale, una carta per voce. La caratteristica resta
+     anche a +0 (la carta dice quale si sta usando), le altre voci nulle
+     spariscono. */
+  function buildParts(parts) {
+    return parts.filter(function (p) {
+      return p.type === 'ability' || p.value !== 0;
+    });
+  }
+
   /* Competenza extra concessa da un oggetto custom (Step 3.9.b, terza
      parte): stesso principio di modSum, un oggetto conta solo se attivo
      (itemEffectsActive di js/items.js, o il fallback se items.js non è
@@ -211,13 +221,19 @@
     var wAbil = w.ranged ? 'DES'
       : (w.finesse && mods.DES > mods.FOR) ? 'DES'
       : 'FOR';
-    var hit = mods[wAbil] + pb + weaponModSum(ch, 'attacco', weaponItemId);
+    var hitOther = weaponModSum(ch, 'attacco', weaponItemId);
+    var hit = mods[wAbil] + pb + hitOther;
     var duelloOk = ch.fightingStyle === 'duello' && !w.ranged && !w.twoHanded;
     var dmgBonus = mods[wAbil] + weaponModSum(ch, 'danni', weaponItemId) + (duelloOk ? 2 : 0);
 
     return {
       hit: hit,
       hitText: fmt(hit),
+      hitParts: buildParts([
+        { type: 'ability', key: wAbil, value: mods[wAbil] },
+        { type: 'prof', value: pb },
+        { type: 'other', value: hitOther }
+      ]),
       dmgText: (w.die || '1d8') + (dmgBonus ? fmt(dmgBonus) : '') + ' ' + (w.type || '')
     };
   }
@@ -280,9 +296,18 @@
 
     var saves = ABILITY_ORDER.map(function (k) {
       var prof = (ch.profSaves || []).indexOf(k) !== -1 || itemGrantsProf(ch, 'profSaves', k);
-      var total = mods[k] + (prof ? pb : 0) + auraBonus + modSum(ch, 'ts');
+      var other = modSum(ch, 'ts');
+      var total = mods[k] + (prof ? pb : 0) + auraBonus + other;
 
-      return { key: k, label: ABILITY_LABELS[k], prof: prof, total: total, text: fmt(total) };
+      return {
+        key: k, label: ABILITY_LABELS[k], prof: prof, total: total, text: fmt(total),
+        parts: buildParts([
+          { type: 'ability', key: k, value: mods[k] },
+          { type: 'prof', value: prof ? pb : 0 },
+          { type: 'aura', value: auraBonus },
+          { type: 'other', value: other }
+        ])
+      };
     });
 
     var skills = {};
@@ -295,7 +320,12 @@
       skills[sk.id] = {
         id: sk.id, label: sk.label, abil: sk.abil,
         abilShort: sk.abil.charAt(0) + sk.abil.slice(1).toLowerCase(),
-        prof: prof, expertise: expertise, total: total, text: fmt(total)
+        prof: prof, expertise: expertise, total: total, text: fmt(total),
+        parts: buildParts([
+          { type: 'ability', key: sk.abil, value: mods[sk.abil] },
+          { type: 'prof', value: prof ? pb : 0 },
+          { type: 'expertise', value: expertise ? pb : 0 }
+        ])
       };
     });
     var passivePerception = 10 + skills.percezione.total + modSum(ch, 'pp');
@@ -384,7 +414,8 @@
     var initBonusDef = bonuses.gloomInit;
     var initBonus = (initBonusDef && initBonusDef.subclass === ch.subclassId)
       ? Math.max(initBonusDef.min || 0, mods[initBonusDef.ability]) : 0;
-    var initiative = mods.DES + modSum(ch, 'iniziativa') + initBonus;
+    var initOther = modSum(ch, 'iniziativa');
+    var initiative = mods.DES + initOther + initBonus;
 
     /* Caratteristica/tipo da incantatore: normalmente di classe, ma il
        "terzo" incantatore (Cavaliere Occulto/Truffatore Arcano, Fase 5) li
@@ -393,7 +424,8 @@
     var spellAbility = subclass.spellAbility || klass.spellAbility || 'CAR';
     var effCasterType = subclass.casterType || klass.casterType;
     var spellDc = 8 + pb + mods[spellAbility] + modSum(ch, 'cd-inc');
-    var spellAttack = pb + mods[spellAbility] + modSum(ch, 'att-inc');
+    var spellAttackOther = modSum(ch, 'att-inc');
+    var spellAttack = pb + mods[spellAbility] + spellAttackOther;
 
     /* PF massimi: dado pieno al 1° livello, media fissa dai successivi */
     var die = parseInt((klass.hitDie || 'd8').slice(1), 10);
@@ -596,9 +628,19 @@
       initiative: initiative,
       initiativeText: fmt(initiative),
       initiativeNote: ch.initiativeNote || '',
+      initiativeParts: buildParts([
+        { type: 'ability', key: 'DES', value: mods.DES },
+        { type: 'subclass', value: initBonus },
+        { type: 'other', value: initOther }
+      ]),
       hasSteed: hasSteed,
       spellDc: spellDc,
       spellAttack: spellAttack,
+      spellAttackParts: buildParts([
+        { type: 'ability', key: spellAbility, value: mods[spellAbility] },
+        { type: 'prof', value: pb },
+        { type: 'other', value: spellAttackOther }
+      ]),
       spellAbility: spellAbility,
       spellAbilityModText: fmt(mods[spellAbility]),
       poolMax: poolMax,
@@ -613,8 +655,16 @@
         mastery: w.mastery || '',
         hit: weaponAttack.hit,
         hitText: weaponAttack.hitText,
+        hitParts: weaponAttack.hitParts,
         dmgText: weaponAttack.dmgText
       },
+      /* Regole che agiscono sul tiro e non sul bonus (PHB 2024), lette dal
+         lancio dadi: Critico Migliorato/Superiore del Campione, Talento
+         Affidabile del Ladro, Fortuna dell'Halfling. */
+      weaponCritFrom: ch.classId === 'guerriero' && ch.subclassId === 'campione'
+        ? (ch.level >= 15 ? 18 : (ch.level >= 3 ? 19 : 20)) : 20,
+      reliableTalent: ch.classId === 'ladro' && ch.level >= 7,
+      halflingLuck: ch.speciesId === 'halfling',
       carryStr: ch.abilities.FOR
     };
   }

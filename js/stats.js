@@ -583,8 +583,7 @@
     }
     /* Danno Bardico (Collegio della Danza): stessa idea di Arti Marziali —
        il dado Ispirazione Bardica sostituisce il danno normale di un Colpo
-       Senz'Armi, chip puramente informativo (l'app non tira mai dadi al
-       posto del giocatore). */
+       Senz'Armi, chip puramente informativo. */
     if (ch.classId === 'bardo' && view.subclassId === 'danza') {
       var bardicDie = (klass.bardicDie || [])[view.level];
       if (bardicDie) {
