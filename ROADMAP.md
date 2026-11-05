@@ -29,8 +29,16 @@
   (32.940 controlli), equità del d20 (chi-quadro 13 su 200.000 tiri, soglia
   43,8), casi limite forzati, viewport 375×667/375×812/430×932.
   **Prossimi punti da fare (decisi da Andrea il 2026-11-05):**
-  1. Tirare i danni direttamente da un attacco (con i critici) o da un
-     incantesimo (es. pulsante 8d6 sulla Palla di Fuoco).
+  Nessun punto aperto: restano i "Più avanti" qui sotto.
+
+  **Tiro dei danni (scelta A, "di seguito"):** dopo un colpo, o se il DM non ha
+  ancora detto la CA, compare "Tira danni · 1d8 + 6"; sul critico i dadi raddoppiano
+  e i modificatori no (PHB). Il palco è quello del tiro libero con dadi temporanei
+  (`useTemporary` in `js/dice-free.js`: niente recenti, niente ultimo tiro), con
+  "‹ Attacco" che ripristina il d20 com'era e "Modifica dadi" per Attacco Furtivo,
+  Punizione e simili. Nel dettaglio degli incantesimi del Grimorio "Tira 8d6" con la
+  scelta dello slot fra quelli del personaggio; dadi letti dal testo (`spellRoll`),
+  metà per difetto per chi supera il TS. Cache busting `?v=251`.
 
   **Slot del patto del Warlock (corretto):** il PHB ridà tutti gli slot di Magia
   del Patto a ogni riposo breve o lungo, l'app li ricaricava solo col lungo e
